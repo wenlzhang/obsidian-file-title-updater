@@ -3,7 +3,7 @@
 	"name": "File Title Updater",
 	"version": "0.1.4",
 	"minAppVersion": "1.0.0",
-	"description": "Synchronize titles between filename, frontmatter, and first heading in Obsidian notes",
+	"description": "Synchronize titles between filename, frontmatter, and first heading in notes.",
 	"author": "wenlzhang",
 	"authorUrl": "https://github.com/wenlzhang",
 	"fundingUrl": {

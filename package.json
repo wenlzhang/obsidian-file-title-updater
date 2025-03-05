@@ -1,7 +1,7 @@
 {
     "name": "file-title-updater",
     "version": "0.1.4",
-    "description": "Synchronize titles between filename, frontmatter, and first heading in Obsidian notes",
+    "description": "Synchronize titles between filename, frontmatter, and first heading in notes.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",
