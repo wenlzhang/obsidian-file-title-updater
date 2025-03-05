@@ -14,8 +14,6 @@ export class SettingsTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl("h2", { text: "File title updater settings" });
-
         new Setting(containerEl)
             .setName("Default title source")
             .setDesc(
