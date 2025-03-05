@@ -114,7 +114,9 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         const headingMatch = fileContents.match(/^#\s+(.+)$/m);
 
         if (!headingMatch) {
-            throw new Error("No level 1 heading found in the file");
+            throw new Error(
+                "No level 1 heading found in the file. Please add a level 1 heading or use another source for synchronization.",
+            );
         }
 
         const title = headingMatch[1];
@@ -178,20 +180,41 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             updatedContent = updatedContent.replace(headingRegex, `# ${title}`);
         } else {
             // Add heading after frontmatter
-            const afterFrontmatter =
-                updatedContent.indexOf("---\n") !== -1
-                    ? updatedContent.indexOf("---\n") + 4
-                    : 0;
+            const frontmatterEndMatch = updatedContent.match(
+                /^---\s*\n[\s\S]*?\n---\s*\n/,
+            );
 
-            if (afterFrontmatter > 0) {
-                const beforeHeading = updatedContent.substring(
-                    0,
-                    afterFrontmatter,
-                );
-                const afterHeading = updatedContent.substring(afterFrontmatter);
-                updatedContent = `${beforeHeading}\n# ${title}\n\n${afterHeading.trim()}`;
+            if (frontmatterEndMatch) {
+                const frontmatterEnd = frontmatterEndMatch[0];
+                const frontmatterEndPos =
+                    updatedContent.indexOf(frontmatterEnd) +
+                    frontmatterEnd.length;
+
+                // Check if there's content after frontmatter
+                const afterFrontmatter = updatedContent
+                    .substring(frontmatterEndPos)
+                    .trim();
+
+                if (afterFrontmatter.length > 0) {
+                    // Insert heading between frontmatter and content
+                    updatedContent =
+                        updatedContent.substring(0, frontmatterEndPos) +
+                        `\n# ${title}\n\n` +
+                        afterFrontmatter;
+                } else {
+                    // Just add heading after frontmatter
+                    updatedContent =
+                        updatedContent.substring(0, frontmatterEndPos) +
+                        `\n# ${title}\n`;
+                }
             } else {
-                updatedContent = `# ${title}\n\n${updatedContent}`;
+                // No frontmatter, add heading at the beginning
+                const contentTrimmed = updatedContent.trim();
+                if (contentTrimmed.length > 0) {
+                    updatedContent = `# ${title}\n\n${contentTrimmed}`;
+                } else {
+                    updatedContent = `# ${title}`;
+                }
             }
         }
 
