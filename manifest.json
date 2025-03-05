@@ -1,8 +1,9 @@
 {
-	"id": "plugin-template",
-	"name": "Plugin Template",
-	"version": "0.0.1",
+	"id": "file-title-updater",
+	"name": "File Title Updater",
+	"version": "0.1.0",
 	"minAppVersion": "1.0.0",
+	"description": "Synchronize titles between filename, frontmatter, and first heading in Obsidian notes",
 	"author": "wenlzhang",
 	"authorUrl": "https://github.com/wenlzhang",
 	"fundingUrl": {

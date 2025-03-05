@@ -1,10 +1,11 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
-import type MyPlugin from './main';
+import { App, PluginSettingTab, Setting, DropdownComponent } from 'obsidian';
+import type FileTitleUpdaterPlugin from './main';
+import { TitleSource } from './settings';
 
 export class SettingsTab extends PluginSettingTab {
-    plugin: MyPlugin;
+    plugin: FileTitleUpdaterPlugin;
 
-    constructor(app: App, plugin: MyPlugin) {
+    constructor(app: App, plugin: FileTitleUpdaterPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -13,17 +14,21 @@ export class SettingsTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Plugin Settings' });
+        containerEl.createEl('h2', { text: 'File title updater settings' });
 
         new Setting(containerEl)
-            .setName('Example Setting')
-            .setDesc('This is an example setting')
-            .addText(text => text
-                .setPlaceholder('Enter your setting')
-                .setValue(this.plugin.settings.exampleSetting)
-                .onChange(async (value) => {
-                    this.plugin.settings.exampleSetting = value;
-                    await this.plugin.saveSettings();
-                }));
+            .setName('Default title source')
+            .setDesc('Choose which source should be used as the default when syncing titles')
+            .addDropdown((dropdown: DropdownComponent) => {
+                dropdown
+                    .addOption(TitleSource.FILENAME, 'Filename')
+                    .addOption(TitleSource.FRONTMATTER, 'Frontmatter title')
+                    .addOption(TitleSource.HEADING, 'First heading')
+                    .setValue(this.plugin.settings.defaultTitleSource)
+                    .onChange(async (value: TitleSource) => {
+                        this.plugin.settings.defaultTitleSource = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
     }
 }

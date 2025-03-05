@@ -1,55 +1,57 @@
-# Plugin Template
+# File Title Updater
 
-This is a template for creating plugins for [Obsidian](https://obsidian.md), maintained by [wenlzhang](https://github.com/wenlzhang).
+A plugin for [Obsidian](https://obsidian.md) that synchronizes titles between filename, frontmatter, and first heading in your notes.
 
-## Getting started
+## Features
 
-1. Clone this repository to your local machine
-2. Update the following files with your plugin information:
-   - `manifest.json`:
-     - `id`: Your plugin ID (in kebab-case)
-     - `name`: Your plugin name
-     - `author`: Your name
-     - `authorUrl`: Your website or GitHub profile URL
-     - `fundingUrl`: Optional funding information
-   - `package.json`:
-     - `name`: Your plugin name (should match manifest.json)
-     - `description`: Your plugin description
-     - `author`: Your name
-     - `keywords`: Relevant keywords for your plugin
+This plugin helps maintain consistency between the three places where a note's title can appear:
 
-## Development
+1. The filename
+2. The `title` field in the frontmatter
+3. The first level 1 heading (`#`) in the note
 
-1. Install dependencies:
-```bash
-npm install
-```
+The plugin provides four commands:
 
-2. Start development server:
-```bash
-npm run dev
-```
+- **Sync titles using default source**: Uses the default source (configurable in settings) to update all other title locations
+- **Sync titles using filename as source**: Uses the filename to update frontmatter title and first heading
+- **Sync titles using frontmatter as source**: Uses the frontmatter title to update filename and first heading
+- **Sync titles using first heading as source**: Uses the first level 1 heading to update filename and frontmatter title
 
-3. Build the plugin:
-```bash
-npm run build
-```
+## Why use this plugin?
 
-## Testing your plugin
+Having the same title in multiple places provides redundancy and makes your notes more accessible:
 
-1. Create a test vault in Obsidian
-2. Create a `.obsidian/plugins` folder in your test vault
-3. Copy your plugin folder into the plugins folder
-4. Reload Obsidian to load the plugin (Ctrl/Cmd + R)
-5. Enable the plugin in Obsidian's settings
+- Consistent filenames make it easier to find notes in your file system
+- Frontmatter titles enable better metadata management and can be used with plugins like Dataview
+- First-level headings provide visual context when reading the note
 
-## Publishing your plugin
+## Usage
 
-1. Update `versions.json` with your plugin's version history
-2. Test your plugin thoroughly
-3. Create a GitHub release
-4. Submit your plugin to the Obsidian Plugin Gallery
+1. Open a note in Obsidian
+2. Use one of the commands from the command palette (Ctrl/Cmd + P)
+3. The plugin will update all title locations based on your selected source
 
-## Support me
+## Configuration
+
+In the plugin settings, you can configure:
+
+- **Default title source**: Choose which source (filename, frontmatter, or heading) should be used as the default when syncing titles
+
+## Installation
+
+### From Obsidian Community Plugins
+
+1. Open Obsidian Settings
+2. Go to Community Plugins and disable Safe Mode
+3. Click Browse and search for "File Title Updater"
+4. Install and enable the plugin
+
+### Manual Installation
+
+1. Download the latest release from the [releases page](https://github.com/wenlzhang/obsidian-file-title-updater/releases)
+2. Extract the zip file to your Obsidian vault's `.obsidian/plugins` folder
+3. Enable the plugin in Obsidian's settings
+
+## Support
 
 <a href='https://ko-fi.com/C0C66C1TB' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
