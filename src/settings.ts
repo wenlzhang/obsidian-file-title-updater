@@ -1,9 +1,9 @@
-import { App } from 'obsidian';
+import { App } from "obsidian";
 
 export enum TitleSource {
-    FILENAME = 'filename',
-    FRONTMATTER = 'frontmatter',
-    HEADING = 'heading'
+    FILENAME = "filename",
+    FRONTMATTER = "frontmatter",
+    HEADING = "heading",
 }
 
 export interface PluginSettings {
@@ -11,5 +11,5 @@ export interface PluginSettings {
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
-    defaultTitleSource: TitleSource.FILENAME
+    defaultTitleSource: TitleSource.FILENAME,
 };

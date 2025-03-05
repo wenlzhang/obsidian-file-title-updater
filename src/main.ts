@@ -1,6 +1,13 @@
-import { Plugin, TFile, Notice, Editor, MarkdownView, FrontMatterCache } from 'obsidian';
-import { SettingsTab } from './settingsTab';
-import { PluginSettings, DEFAULT_SETTINGS, TitleSource } from './settings';
+import {
+    Plugin,
+    TFile,
+    Notice,
+    Editor,
+    MarkdownView,
+    FrontMatterCache,
+} from "obsidian";
+import { SettingsTab } from "./settingsTab";
+import { PluginSettings, DEFAULT_SETTINGS, TitleSource } from "./settings";
 
 export default class FileTitleUpdaterPlugin extends Plugin {
     settings: PluginSettings;
@@ -13,30 +20,30 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
         // Command to sync titles based on default source
         this.addCommand({
-            id: 'sync-titles-default',
-            name: 'Sync titles using default source',
-            callback: () => this.syncTitlesWithDefault()
+            id: "sync-titles-default",
+            name: "Sync titles using default source",
+            callback: () => this.syncTitlesWithDefault(),
         });
 
         // Command to sync titles using filename as source
         this.addCommand({
-            id: 'sync-titles-from-filename',
-            name: 'Sync titles using filename as source',
-            callback: () => this.syncTitles(TitleSource.FILENAME)
+            id: "sync-titles-from-filename",
+            name: "Sync titles using filename as source",
+            callback: () => this.syncTitles(TitleSource.FILENAME),
         });
 
         // Command to sync titles using frontmatter as source
         this.addCommand({
-            id: 'sync-titles-from-frontmatter',
-            name: 'Sync titles using frontmatter as source',
-            callback: () => this.syncTitles(TitleSource.FRONTMATTER)
+            id: "sync-titles-from-frontmatter",
+            name: "Sync titles using frontmatter as source",
+            callback: () => this.syncTitles(TitleSource.FRONTMATTER),
         });
 
         // Command to sync titles using heading as source
         this.addCommand({
-            id: 'sync-titles-from-heading',
-            name: 'Sync titles using first heading as source',
-            callback: () => this.syncTitles(TitleSource.HEADING)
+            id: "sync-titles-from-heading",
+            name: "Sync titles using first heading as source",
+            callback: () => this.syncTitles(TitleSource.HEADING),
         });
     }
 
@@ -45,7 +52,11 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     }
 
     async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        this.settings = Object.assign(
+            {},
+            DEFAULT_SETTINGS,
+            await this.loadData(),
+        );
     }
 
     async saveSettings() {
@@ -59,7 +70,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     async syncTitles(source: TitleSource) {
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile) {
-            new Notice('No active file');
+            new Notice("No active file");
             return;
         }
 
@@ -75,10 +86,10 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     await this.syncFromHeading(activeFile);
                     break;
             }
-            new Notice('Titles synchronized successfully');
+            new Notice("Titles synchronized successfully");
         } catch (error) {
             new Notice(`Error synchronizing titles: ${error.message}`);
-            console.error('Error synchronizing titles:', error);
+            console.error("Error synchronizing titles:", error);
         }
     }
 
@@ -88,11 +99,12 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     }
 
     async syncFromFrontmatter(file: TFile) {
-        const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const frontmatter =
+            this.app.metadataCache.getFileCache(file)?.frontmatter;
         if (!frontmatter || !frontmatter.title) {
-            throw new Error('No title found in frontmatter');
+            throw new Error("No title found in frontmatter");
         }
-        
+
         const title = frontmatter.title;
         await this.updateAllTitles(file, title);
     }
@@ -100,11 +112,11 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     async syncFromHeading(file: TFile) {
         const fileContents = await this.app.vault.read(file);
         const headingMatch = fileContents.match(/^#\s+(.+)$/m);
-        
+
         if (!headingMatch) {
-            throw new Error('No level 1 heading found in the file');
+            throw new Error("No level 1 heading found in the file");
         }
-        
+
         const title = headingMatch[1];
         await this.updateAllTitles(file, title);
     }
@@ -114,14 +126,14 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         if (file.basename !== title) {
             await this.app.fileManager.renameFile(
                 file,
-                `${file.parent?.path ? file.parent.path + '/' : ''}${title}${file.extension ? '.' + file.extension : ''}`
+                `${file.parent?.path ? file.parent.path + "/" : ""}${title}${file.extension ? "." + file.extension : ""}`,
             );
         }
 
         // Update file contents (frontmatter and heading)
         const fileContents = await this.app.vault.read(file);
         const updatedContents = this.updateFileContents(fileContents, title);
-        
+
         if (fileContents !== updatedContents) {
             await this.app.vault.modify(file, updatedContents);
         }
@@ -129,59 +141,60 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
     updateFileContents(content: string, title: string): string {
         let updatedContent = content;
-        
+
         // Update frontmatter title
         const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
         const frontmatterMatch = content.match(frontmatterRegex);
-        
+
         if (frontmatterMatch) {
             const frontmatter = frontmatterMatch[1];
             const titleRegex = /^title:\s*(.*)$/m;
             const titleMatch = frontmatter.match(titleRegex);
-            
+
             if (titleMatch) {
                 // Update existing title
                 updatedContent = updatedContent.replace(
                     titleRegex,
-                    `title: ${title}`
+                    `title: ${title}`,
                 );
             } else {
                 // Add title to existing frontmatter
                 updatedContent = updatedContent.replace(
                     frontmatterRegex,
-                    `---\ntitle: ${title}\n$1\n---\n`
+                    `---\ntitle: ${title}\n$1\n---\n`,
                 );
             }
         } else {
             // Add new frontmatter with title
             updatedContent = `---\ntitle: ${title}\n---\n\n${updatedContent}`;
         }
-        
+
         // Update or add first level 1 heading
         const headingRegex = /^#\s+(.+)$/m;
         const headingMatch = updatedContent.match(headingRegex);
-        
+
         if (headingMatch) {
             // Update existing heading
-            updatedContent = updatedContent.replace(
-                headingRegex,
-                `# ${title}`
-            );
+            updatedContent = updatedContent.replace(headingRegex, `# ${title}`);
         } else {
             // Add heading after frontmatter
-            const afterFrontmatter = updatedContent.indexOf('---\n') !== -1 
-                ? updatedContent.indexOf('---\n') + 4 
-                : 0;
-                
+            const afterFrontmatter =
+                updatedContent.indexOf("---\n") !== -1
+                    ? updatedContent.indexOf("---\n") + 4
+                    : 0;
+
             if (afterFrontmatter > 0) {
-                const beforeHeading = updatedContent.substring(0, afterFrontmatter);
+                const beforeHeading = updatedContent.substring(
+                    0,
+                    afterFrontmatter,
+                );
                 const afterHeading = updatedContent.substring(afterFrontmatter);
                 updatedContent = `${beforeHeading}\n# ${title}\n\n${afterHeading.trim()}`;
             } else {
                 updatedContent = `# ${title}\n\n${updatedContent}`;
             }
         }
-        
+
         return updatedContent;
     }
 }
