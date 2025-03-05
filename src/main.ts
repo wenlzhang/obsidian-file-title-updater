@@ -196,17 +196,23 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     .trim();
 
                 if (afterFrontmatter.length > 0) {
-                    // Insert heading between frontmatter and content
+                    // Insert heading between frontmatter and content with exactly one empty line
                     updatedContent =
                         updatedContent.substring(0, frontmatterEndPos) +
                         `\n# ${title}\n\n` +
                         afterFrontmatter;
                 } else {
-                    // Just add heading after frontmatter
+                    // Just add heading after frontmatter with exactly one empty line
                     updatedContent =
                         updatedContent.substring(0, frontmatterEndPos) +
-                        `\n# ${title}\n`;
+                        `\n# ${title}`;
                 }
+
+                // Fix any potential multiple empty lines between frontmatter and heading
+                updatedContent = updatedContent.replace(
+                    /---\s*\n\s*\n+/g,
+                    "---\n\n",
+                );
             } else {
                 // No frontmatter, add heading at the beginning
                 const contentTrimmed = updatedContent.trim();
