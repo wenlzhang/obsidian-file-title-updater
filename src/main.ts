@@ -75,6 +75,12 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         }
 
         try {
+            // Check if all titles are already the same
+            if (await this.areTitlesAlreadySynchronized(activeFile)) {
+                new Notice("All titles are already synchronized");
+                return;
+            }
+
             switch (source) {
                 case TitleSource.FILENAME:
                     await this.syncFromFilename(activeFile);
@@ -91,6 +97,37 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             new Notice(`Error synchronizing titles: ${error.message}`);
             console.error("Error synchronizing titles:", error);
         }
+    }
+
+    async areTitlesAlreadySynchronized(file: TFile): Promise<boolean> {
+        // Get filename
+        const filename = file.basename;
+
+        // Get frontmatter title
+        const frontmatter =
+            this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const frontmatterTitle = frontmatter?.title;
+
+        // If no frontmatter title, they can't all be the same
+        if (!frontmatterTitle) {
+            return false;
+        }
+
+        // Get heading title
+        const fileContents = await this.app.vault.read(file);
+        const headingMatch = fileContents.match(/^#\s+(.+)$/m);
+
+        // If no heading, they can't all be the same
+        if (!headingMatch) {
+            return false;
+        }
+
+        const headingTitle = headingMatch[1];
+
+        // Check if all three titles are the same
+        return (
+            filename === frontmatterTitle && frontmatterTitle === headingTitle
+        );
     }
 
     async syncFromFilename(file: TFile) {
