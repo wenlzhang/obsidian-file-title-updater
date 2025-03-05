@@ -17,6 +17,14 @@ The plugin provides four commands:
 - **Sync titles using frontmatter as source**: Uses the frontmatter title to update filename and first heading
 - **Sync titles using first heading as source**: Uses the first level 1 heading to update filename and frontmatter title
 
+### Smart Behavior
+
+The plugin includes several intelligent features:
+
+- **Detects already synchronized titles**: If all three titles are already the same, the plugin will notify you and skip unnecessary updates
+- **Proper spacing**: Ensures exactly one empty line between frontmatter and the first heading
+- **Handles edge cases**: Properly creates first headings when none exist and provides helpful error messages
+
 ## Why use this plugin?
 
 Having the same title in multiple places provides redundancy and makes your notes more accessible:
@@ -30,6 +38,12 @@ Having the same title in multiple places provides redundancy and makes your note
 1. Open a note in Obsidian
 2. Use one of the commands from the command palette (Ctrl/Cmd + P)
 3. The plugin will update all title locations based on your selected source
+
+### Special Cases
+
+- If all titles are already synchronized, you'll see a notification: "All titles are already synchronized"
+- When creating a first heading in a note that doesn't have one, the heading will be placed after the frontmatter with exactly one empty line
+- If you try to sync from a source that doesn't exist (e.g., a non-existent frontmatter title), you'll receive a helpful error message
 
 ## Configuration
 
