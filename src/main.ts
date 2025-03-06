@@ -241,9 +241,10 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             case IllegalCharacterHandling.REPLACE_WITH_UNDERSCORE:
                 return title.replace(illegalCharsRegex, "_");
 
-            case IllegalCharacterHandling.CUSTOM:
+            case IllegalCharacterHandling.CUSTOM: {
                 const replacement = this.settings.customReplacement || "";
                 return title.replace(illegalCharsRegex, replacement);
+            }
 
             default:
                 return title.replace(illegalCharsRegex, "");
