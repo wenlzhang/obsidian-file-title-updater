@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [0.2.0] - 2025-03-06
+
+### Changes
+
+- Fix ESLint error in main.ts and prepare for v0.1.5 release
+- Fine tune settings tab
+- Fine tune settings tab
+- Handle illegal characters
+- Update README.md
+- Update README.md
+
 ## [0.1.5] - 2025-03-05
 
 ### Changes
