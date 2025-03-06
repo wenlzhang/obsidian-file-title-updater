@@ -31,7 +31,9 @@ export class SettingsTab extends PluginSettingTab {
                     }),
             );
 
-        new Setting(containerEl).setName("Illegal character handling").setHeading();
+        new Setting(containerEl)
+            .setName("Illegal character handling")
+            .setHeading();
 
         new Setting(containerEl)
             .setName("Illegal character handling")
