@@ -7,7 +7,12 @@ import {
     FrontMatterCache,
 } from "obsidian";
 import { SettingsTab } from "./settingsTab";
-import { PluginSettings, DEFAULT_SETTINGS, TitleSource } from "./settings";
+import {
+    PluginSettings,
+    DEFAULT_SETTINGS,
+    TitleSource,
+    IllegalCharacterHandling,
+} from "./settings";
 
 export default class FileTitleUpdaterPlugin extends Plugin {
     settings: PluginSettings;
@@ -143,7 +148,31 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         }
 
         const title = frontmatter.title;
-        await this.updateAllTitles(file, title);
+
+        // When syncing from frontmatter to filename, we need to sanitize the title
+        // for illegal characters that aren't allowed in filenames
+        const sanitizedTitle = this.sanitizeFilename(title);
+
+        // Check if sanitization changed the title
+        if (sanitizedTitle !== title) {
+            // If we should update all titles with the sanitized version
+            if (this.settings.updateOtherTitlesWithSanitizedVersion) {
+                new Notice(
+                    `Title contains illegal characters. All titles will be updated with the sanitized version: "${sanitizedTitle}"`,
+                );
+                await this.updateAllTitles(file, sanitizedTitle);
+            } else {
+                new Notice(
+                    `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
+                );
+                // Update filename with sanitized version, but keep original in frontmatter and heading
+                await this.updateFilename(file, sanitizedTitle);
+                await this.updateFrontmatterAndHeading(file, title);
+            }
+        } else {
+            // No illegal characters, proceed normally
+            await this.updateAllTitles(file, title);
+        }
     }
 
     async syncFromHeading(file: TFile) {
@@ -157,19 +186,88 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         }
 
         const title = headingMatch[1];
-        await this.updateAllTitles(file, title);
+
+        // When syncing from heading to filename, we need to sanitize the title
+        // for illegal characters that aren't allowed in filenames
+        const sanitizedTitle = this.sanitizeFilename(title);
+
+        // Check if sanitization changed the title
+        if (sanitizedTitle !== title) {
+            // If we should update all titles with the sanitized version
+            if (this.settings.updateOtherTitlesWithSanitizedVersion) {
+                new Notice(
+                    `Title contains illegal characters. All titles will be updated with the sanitized version: "${sanitizedTitle}"`,
+                );
+                await this.updateAllTitles(file, sanitizedTitle);
+            } else {
+                new Notice(
+                    `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
+                );
+                // Update filename with sanitized version, but keep original in frontmatter and heading
+                await this.updateFilename(file, sanitizedTitle);
+                await this.updateFrontmatterAndHeading(file, title);
+            }
+        } else {
+            // No illegal characters, proceed normally
+            await this.updateAllTitles(file, title);
+        }
+    }
+
+    /**
+     * Sanitize a title for use as a filename by removing or replacing illegal characters
+     * according to the user's settings
+     */
+    sanitizeFilename(title: string): string {
+        // Obsidian doesn't allow these characters in filenames:
+        // / \ : * ? " < > |
+        const illegalCharsRegex = /[\/\\:*?"<>|#^[\]]/g;
+
+        // Check if the title contains illegal characters
+        if (!illegalCharsRegex.test(title)) {
+            return title;
+        }
+
+        // Handle illegal characters based on user settings
+        switch (this.settings.illegalCharHandling) {
+            case IllegalCharacterHandling.REMOVE:
+                return title.replace(illegalCharsRegex, "");
+
+            case IllegalCharacterHandling.REPLACE_WITH_SPACE:
+                return title.replace(illegalCharsRegex, " ");
+
+            case IllegalCharacterHandling.REPLACE_WITH_DASH:
+                return title.replace(illegalCharsRegex, "-");
+
+            case IllegalCharacterHandling.REPLACE_WITH_UNDERSCORE:
+                return title.replace(illegalCharsRegex, "_");
+
+            case IllegalCharacterHandling.CUSTOM:
+                const replacement = this.settings.customReplacement || "";
+                return title.replace(illegalCharsRegex, replacement);
+
+            default:
+                return title.replace(illegalCharsRegex, "");
+        }
     }
 
     async updateAllTitles(file: TFile, title: string) {
         // Update filename (if different)
+        await this.updateFilename(file, title);
+
+        // Update file contents (frontmatter and heading)
+        await this.updateFrontmatterAndHeading(file, title);
+    }
+
+    async updateFilename(file: TFile, title: string) {
         if (file.basename !== title) {
             await this.app.fileManager.renameFile(
                 file,
                 `${file.parent?.path ? file.parent.path + "/" : ""}${title}${file.extension ? "." + file.extension : ""}`,
             );
         }
+    }
 
-        // Update file contents (frontmatter and heading)
+    async updateFrontmatterAndHeading(file: TFile, title: string) {
         const fileContents = await this.app.vault.read(file);
         const updatedContents = this.updateFileContents(fileContents, title);
 

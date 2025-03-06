@@ -26,6 +26,19 @@ The plugin includes several intelligent features:
 - **Detects already synchronized titles**: If all three titles are already the same, the plugin will notify you and skip unnecessary updates
 - **Proper spacing**: Ensures exactly one empty line between frontmatter and the first heading
 - **Handles edge cases**: Properly creates first headings when none exist and provides helpful error messages
+- **Handles illegal characters**: Automatically sanitizes titles when updating filenames to remove or replace characters that aren't allowed in filenames
+
+### Illegal Character Handling
+
+When syncing titles from frontmatter or headings to filenames, some characters aren't allowed in filenames. The plugin provides several options for handling these characters:
+
+- **Remove illegal characters**: Simply removes any characters that aren't allowed in filenames
+- **Replace with space**: Replaces illegal characters with spaces
+- **Replace with dash (-)**: Replaces illegal characters with dashes
+- **Replace with underscore (_)**: Replaces illegal characters with underscores
+- **Custom replacement**: Specify your own character to replace illegal characters with
+
+You can also choose whether to update all titles with the sanitized version or keep the original title in the frontmatter and heading while only sanitizing the filename.
 
 ## Why use this plugin?
 
@@ -46,6 +59,7 @@ Having the same title in multiple places provides redundancy and makes your note
 - If all titles are already synchronized, you'll see a notification: "All titles are already synchronized"
 - When creating a first heading in a note that doesn't have one, the heading will be placed after the frontmatter with exactly one empty line
 - If you try to sync from a source that doesn't exist (e.g., a non-existent frontmatter title), you'll receive a helpful error message
+- When syncing from frontmatter or heading to filename, illegal characters will be handled according to your settings
 
 ## Configuration
 
