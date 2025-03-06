@@ -2,7 +2,7 @@
 
 [![GitHub release (Latest by date)](https://img.shields.io/github/v/release/wenlzhang/obsidian-file-title-updater)](https://github.com/wenlzhang/obsidian-file-title-updater/releases) ![GitHub all releases](https://img.shields.io/github/downloads/wenlzhang/obsidian-file-title-updater/total?color=success)
 
-A plugin for [Obsidian](https://obsidian.md) that synchronizes titles between filename, frontmatter, and first heading in your notes.
+An [Obsidian](https://obsidian.md) plugin that synchronizes titles between filename, frontmatter, and first heading in your notes.
 
 ## Features
 
