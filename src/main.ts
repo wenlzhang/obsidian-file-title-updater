@@ -5,7 +5,9 @@ import {
     Editor,
     MarkdownView,
     FrontMatterCache,
-    getFrontMatterInfo
+    getFrontMatterInfo,
+    parseYaml,
+    stringifyYaml
 } from "obsidian";
 import { SettingsTab } from "./settingsTab";
 import {
@@ -320,33 +322,55 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         const hasFrontMatter = frontMatterInfo.exists;
 
         if (hasFrontMatter) {
-            const frontmatter = frontMatterInfo.frontmatter;
-            const titleRegex = /^title:\s*(.*)$/m;
-            const titleMatch = frontmatter.match(titleRegex);
+            // Get the frontmatter content
+            const yaml = frontMatterInfo.frontmatter;
+            
+            try {
+                // Parse the YAML frontmatter
+                const frontmatter = parseYaml(yaml) || {};
+                
+                // Update the title property
+                frontmatter.title = title;
+                
+                // Convert back to YAML string
+                const updatedFrontmatter = stringifyYaml(frontmatter);
+                
+                // Replace the frontmatter in the content
+                updatedContent = updatedContent.substring(0, frontMatterInfo.from) + 
+                                updatedFrontmatter + 
+                                updatedContent.substring(frontMatterInfo.to);
+            } catch (e) {
+                // Fallback to regex if YAML parsing fails
+                console.error("Error parsing frontmatter:", e);
+                const titleRegex = /^title:\s*(.*)$/m;
+                const titleMatch = yaml.match(titleRegex);
 
-            if (titleMatch) {
-                // Update existing title in frontmatter
-                const updatedFrontmatter = frontmatter.replace(
-                    titleRegex,
-                    `title: ${title}`
-                );
-                
-                // Replace the frontmatter in the content
-                updatedContent = updatedContent.substring(0, frontMatterInfo.from) + 
-                                 updatedFrontmatter + 
-                                 updatedContent.substring(frontMatterInfo.to);
-            } else {
-                // Add title to existing frontmatter
-                const updatedFrontmatter = `title: ${title}\n${frontmatter}`;
-                
-                // Replace the frontmatter in the content
-                updatedContent = updatedContent.substring(0, frontMatterInfo.from) + 
-                                 updatedFrontmatter + 
-                                 updatedContent.substring(frontMatterInfo.to);
+                if (titleMatch) {
+                    // Update existing title in frontmatter
+                    const updatedFrontmatter = yaml.replace(
+                        titleRegex,
+                        `title: ${title}`
+                    );
+                    
+                    // Replace the frontmatter in the content
+                    updatedContent = updatedContent.substring(0, frontMatterInfo.from) + 
+                                    updatedFrontmatter + 
+                                    updatedContent.substring(frontMatterInfo.to);
+                } else {
+                    // Add title to existing frontmatter
+                    const updatedFrontmatter = `title: ${title}\n${yaml}`;
+                    
+                    // Replace the frontmatter in the content
+                    updatedContent = updatedContent.substring(0, frontMatterInfo.from) + 
+                                    updatedFrontmatter + 
+                                    updatedContent.substring(frontMatterInfo.to);
+                }
             }
         } else {
             // Add new frontmatter with title
-            updatedContent = `---\ntitle: ${title}\n---\n\n${updatedContent}`;
+            const frontmatter = { title: title };
+            const yaml = stringifyYaml(frontmatter);
+            updatedContent = `---\n${yaml}---\n\n${updatedContent}`;
         }
 
         // Update or add first level 1 heading
