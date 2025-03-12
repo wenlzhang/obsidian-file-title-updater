@@ -5,6 +5,7 @@ import {
     Editor,
     MarkdownView,
     FrontMatterCache,
+    getFrontMatterInfo
 } from "obsidian";
 import { SettingsTab } from "./settingsTab";
 import {
@@ -314,27 +315,34 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     updateFileContents(content: string, title: string): string {
         let updatedContent = content;
 
-        // Update frontmatter title
-        const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-        const frontmatterMatch = content.match(frontmatterRegex);
+        // Use getFrontMatterInfo to get information about frontmatter
+        const frontMatterInfo = getFrontMatterInfo(updatedContent);
+        const hasFrontMatter = frontMatterInfo.exists;
 
-        if (frontmatterMatch) {
-            const frontmatter = frontmatterMatch[1];
+        if (hasFrontMatter) {
+            const frontmatter = frontMatterInfo.frontmatter;
             const titleRegex = /^title:\s*(.*)$/m;
             const titleMatch = frontmatter.match(titleRegex);
 
             if (titleMatch) {
-                // Update existing title
-                updatedContent = updatedContent.replace(
+                // Update existing title in frontmatter
+                const updatedFrontmatter = frontmatter.replace(
                     titleRegex,
-                    `title: ${title}`,
+                    `title: ${title}`
                 );
+                
+                // Replace the frontmatter in the content
+                updatedContent = updatedContent.substring(0, frontMatterInfo.from) + 
+                                 updatedFrontmatter + 
+                                 updatedContent.substring(frontMatterInfo.to);
             } else {
                 // Add title to existing frontmatter
-                updatedContent = updatedContent.replace(
-                    frontmatterRegex,
-                    `---\ntitle: ${title}\n$1\n---\n`,
-                );
+                const updatedFrontmatter = `title: ${title}\n${frontmatter}`;
+                
+                // Replace the frontmatter in the content
+                updatedContent = updatedContent.substring(0, frontMatterInfo.from) + 
+                                 updatedFrontmatter + 
+                                 updatedContent.substring(frontMatterInfo.to);
             }
         } else {
             // Add new frontmatter with title
@@ -350,38 +358,35 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             updatedContent = updatedContent.replace(headingRegex, `# ${title}`);
         } else {
             // Add heading after frontmatter
-            const frontmatterEndMatch = updatedContent.match(
-                /^---\s*\n[\s\S]*?\n---\s*\n/,
-            );
-
-            if (frontmatterEndMatch) {
-                const frontmatterEnd = frontmatterEndMatch[0];
-                const frontmatterEndPos =
-                    updatedContent.indexOf(frontmatterEnd) +
-                    frontmatterEnd.length;
-
+            if (hasFrontMatter) {
+                // Get the updated frontmatter info after our changes
+                const updatedFrontMatterInfo = getFrontMatterInfo(updatedContent);
+                
+                // contentStart is the position where the content starts after the frontmatter block
+                const contentStartPos = updatedFrontMatterInfo.contentStart;
+                
                 // Check if there's content after frontmatter
                 const afterFrontmatter = updatedContent
-                    .substring(frontmatterEndPos)
+                    .substring(contentStartPos)
                     .trim();
 
                 if (afterFrontmatter.length > 0) {
                     // Insert heading between frontmatter and content with exactly one empty line
                     updatedContent =
-                        updatedContent.substring(0, frontmatterEndPos) +
+                        updatedContent.substring(0, contentStartPos) +
                         `\n# ${title}\n\n` +
                         afterFrontmatter;
                 } else {
                     // Just add heading after frontmatter with exactly one empty line
                     updatedContent =
-                        updatedContent.substring(0, frontmatterEndPos) +
+                        updatedContent.substring(0, contentStartPos) +
                         `\n# ${title}`;
                 }
 
                 // Fix any potential multiple empty lines between frontmatter and heading
                 updatedContent = updatedContent.replace(
                     /---\s*\n\s*\n+/g,
-                    "---\n\n",
+                    "---\n\n"
                 );
             } else {
                 // No frontmatter, add heading at the beginning
