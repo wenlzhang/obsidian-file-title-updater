@@ -27,28 +27,64 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         this.addCommand({
             id: "sync-titles-default",
             name: "Sync titles using default source",
-            callback: () => this.syncTitlesWithDefault(),
+            checkCallback: (checking: boolean) => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (activeFile) {
+                    if (!checking) {
+                        this.syncTitlesWithDefault();
+                    }
+                    return true;
+                }
+                return false;
+            }
         });
 
         // Command to sync titles using filename as source
         this.addCommand({
             id: "sync-titles-from-filename",
             name: "Sync titles using filename as source",
-            callback: () => this.syncTitles(TitleSource.FILENAME),
+            checkCallback: (checking: boolean) => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (activeFile) {
+                    if (!checking) {
+                        this.syncTitles(TitleSource.FILENAME);
+                    }
+                    return true;
+                }
+                return false;
+            }
         });
 
         // Command to sync titles using frontmatter as source
         this.addCommand({
             id: "sync-titles-from-frontmatter",
             name: "Sync titles using frontmatter as source",
-            callback: () => this.syncTitles(TitleSource.FRONTMATTER),
+            checkCallback: (checking: boolean) => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (activeFile) {
+                    if (!checking) {
+                        this.syncTitles(TitleSource.FRONTMATTER);
+                    }
+                    return true;
+                }
+                return false;
+            }
         });
 
         // Command to sync titles using heading as source
         this.addCommand({
             id: "sync-titles-from-heading",
             name: "Sync titles using first heading as source",
-            callback: () => this.syncTitles(TitleSource.HEADING),
+            checkCallback: (checking: boolean) => {
+                const activeFile = this.app.workspace.getActiveFile();
+                if (activeFile) {
+                    if (!checking) {
+                        this.syncTitles(TitleSource.HEADING);
+                    }
+                    return true;
+                }
+                return false;
+            }
         });
     }
 
