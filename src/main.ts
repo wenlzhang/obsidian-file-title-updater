@@ -154,16 +154,15 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             return false;
         }
 
-        // Get heading title
-        const fileContents = await this.app.vault.read(file);
-        const headingMatch = fileContents.match(/^#\s+(.+)$/m);
+        // Get heading title using MetadataCache instead of regex
+        const headings = this.app.metadataCache.getFileCache(file)?.headings;
+        const topLevelHeading = headings?.find(h => h.level === 1);
+        const headingTitle = topLevelHeading?.heading;
 
         // If no heading, they can't all be the same
-        if (!headingMatch) {
+        if (!headingTitle) {
             return false;
         }
-
-        const headingTitle = headingMatch[1];
 
         // Check if all three titles are the same
         return (
@@ -212,16 +211,18 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     }
 
     async syncFromHeading(file: TFile) {
-        const fileContents = await this.app.vault.read(file);
-        const headingMatch = fileContents.match(/^#\s+(.+)$/m);
+        // Get heading title using MetadataCache instead of regex
+        const headings = this.app.metadataCache.getFileCache(file)?.headings;
+        const topLevelHeading = headings?.find(h => h.level === 1);
+        const headingTitle = topLevelHeading?.heading;
 
-        if (!headingMatch) {
+        if (!headingTitle) {
             throw new Error(
-                "No level 1 heading found in the file. Please add a level 1 heading or use another source for synchronization.",
+                "No level 1 heading found in the file. Please add a level 1 heading or use another source for synchronization."
             );
         }
 
-        const title = headingMatch[1];
+        const title = headingTitle;
 
         // When syncing from heading to filename, we need to sanitize the title
         // for illegal characters that aren't allowed in filenames
