@@ -306,12 +306,9 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     }
 
     async updateFrontmatterAndHeading(file: TFile, title: string) {
-        const fileContents = await this.app.vault.read(file);
-        const updatedContents = this.updateFileContents(fileContents, title);
-
-        if (fileContents !== updatedContents) {
-            await this.app.vault.modify(file, updatedContents);
-        }
+        await this.app.vault.process(file, (fileContents) => {
+            return this.updateFileContents(fileContents, title);
+        });
     }
 
     updateFileContents(content: string, title: string): string {
