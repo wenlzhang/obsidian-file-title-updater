@@ -310,12 +310,46 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
     async updateFrontmatterAndHeading(file: TFile, title: string) {
         await this.app.vault.process(file, (fileContents) => {
-            return this.updateFileContents(fileContents, title);
+            return this.updateFileContents(fileContents, title, file);
         });
     }
 
-    updateFileContents(content: string, title: string): string {
+        // Helper method to find the position of the first level 1 heading in content
+    findFirstHeadingPosition(content: string, file: TFile): { hasHeading: boolean, position: number, text: string } {
+        // Default result with no heading
+        const result = { hasHeading: false, position: -1, text: "" };
+        
+        // Get file cache from metadata cache
+        const fileCache = this.app.metadataCache.getFileCache(file);
+        if (!fileCache || !fileCache.headings) {
+            return result;
+        }
+        
+        // Find the first level 1 heading
+        const topLevelHeading = fileCache.headings.find(h => h.level === 1);
+        if (!topLevelHeading) {
+            return result;
+        }
+        
+        // Get the heading text and position
+        result.hasHeading = true;
+        result.text = topLevelHeading.heading;
+        
+        // Find the position in the content
+        const headingLine = `# ${topLevelHeading.heading}`;
+        result.position = content.indexOf(headingLine);
+        
+        return result;
+    }
+
+    updateFileContents(content: string, title: string, file: TFile): string {
         let updatedContent = content;
+
+        // Check for existing heading first using MetadataCache
+        const headingInfo = this.findFirstHeadingPosition(updatedContent, file);
+        const hasHeading = headingInfo.hasHeading;
+        const headingPos = headingInfo.position;
+        const headingText = headingInfo.text;
 
         // Use getFrontMatterInfo to get information about frontmatter
         const frontMatterInfo = getFrontMatterInfo(updatedContent);
@@ -370,22 +404,46 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             // Add new frontmatter with title
             const frontmatter = { title: title };
             const yaml = stringifyYaml(frontmatter);
-            updatedContent = `---\n${yaml}---\n\n${updatedContent}`;
+            
+            if (hasHeading && headingPos >= 0) {
+                // If there's a heading, insert frontmatter before it
+                // Create frontmatter content properly
+                const frontMatterContent = `---\n${yaml}---\n\n`;
+                
+                updatedContent = 
+                    frontMatterContent + 
+                    updatedContent.substring(0, headingPos).trim() + 
+                    (headingPos > 0 ? "\n\n" : "") + 
+                    updatedContent.substring(headingPos);
+            } else {
+                // No heading, just add frontmatter at the beginning
+                const frontMatterContent = `---\n${yaml}---\n\n`;
+                updatedContent = frontMatterContent + updatedContent;
+            }
         }
 
         // Update or add first level 1 heading
+        // Need to re-check frontmatter info after our modifications
+        const updatedFrontMatterInfo = getFrontMatterInfo(updatedContent);
+        const contentStartsWithFrontmatter = updatedFrontMatterInfo.exists;
+        
+        // We need to use regex for heading detection after modifications since file cache won't be updated yet
         const headingRegex = /^#\s+(.+)$/m;
-        const headingMatch = updatedContent.match(headingRegex);
+        const updatedHeadingMatch = updatedContent.match(headingRegex);
 
-        if (headingMatch) {
-            // Update existing heading
-            updatedContent = updatedContent.replace(headingRegex, `# ${title}`);
+        if (updatedHeadingMatch) {
+            // Extract the heading position and line
+            const headingLine = updatedHeadingMatch[0];
+            const headingIndex = updatedContent.indexOf(headingLine);
+            
+            // Replace the specific heading text while preserving its position
+            updatedContent = 
+                updatedContent.substring(0, headingIndex) + 
+                `# ${title}` + 
+                updatedContent.substring(headingIndex + headingLine.length);
         } else {
             // Add heading after frontmatter
-            if (hasFrontMatter) {
-                // Get the updated frontmatter info after our changes
-                const updatedFrontMatterInfo = getFrontMatterInfo(updatedContent);
-                
+            if (contentStartsWithFrontmatter) {
                 // contentStart is the position where the content starts after the frontmatter block
                 const contentStartPos = updatedFrontMatterInfo.contentStart;
                 
@@ -407,11 +465,16 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                         `\n# ${title}`;
                 }
 
-                // Fix any potential multiple empty lines between frontmatter and heading
-                updatedContent = updatedContent.replace(
-                    /---\s*\n\s*\n+/g,
-                    "---\n\n"
-                );
+                // Ensure proper spacing between frontmatter and heading by using string operations
+                // instead of regex to normalize the spacing
+                const endOfFrontMatter = updatedFrontMatterInfo.to;
+                const textAfterFrontMatter = updatedContent.substring(endOfFrontMatter);
+                
+                // Normalize spacing to exactly one newline after frontmatter
+                updatedContent = 
+                    updatedContent.substring(0, endOfFrontMatter) + 
+                    "\n\n" + 
+                    textAfterFrontMatter.trimStart();
             } else {
                 // No frontmatter, add heading at the beginning
                 const contentTrimmed = updatedContent.trim();
