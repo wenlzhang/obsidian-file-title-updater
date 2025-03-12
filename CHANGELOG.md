@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [0.2.1] - 2025-03-12
+
+### Changes
+
+- Fix frontmatter for empty file
+- Update yaml handling
+- Update frontmatter method
+- Fine-tune file updating method
+- Update heading sync method
+- Use conditional commands
+
 ## [0.2.0] - 2025-03-06
 
 ### Changes
