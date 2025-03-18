@@ -48,40 +48,37 @@ Having the same title in multiple places provides redundancy and makes your note
 - Frontmatter titles enable better metadata management and can be used with plugins like Dataview
 - First-level headings provide visual context when reading the note
 
-## Usage
+## Documentation
 
-1. Open a note in Obsidian
-2. Use one of the commands from the command palette (Ctrl/Cmd + P)
-3. The plugin will update all title locations based on your selected source
+📚 **[View Full Documentation](https://ptkm.net/obsidian-file-title-updater)**
 
-### Special Cases
+Visit the documentation site to learn how to make the most of File Title Updater in your Obsidian workflow.
 
-- If all titles are already synchronized, you'll see a notification: "All titles are already synchronized"
-- When creating a first heading in a note that doesn't have one, the heading will be placed after the frontmatter with exactly one empty line
-- If you try to sync from a source that doesn't exist (e.g., a non-existent frontmatter title), you'll receive a helpful error message
-- When syncing from frontmatter or heading to filename, illegal characters will be handled according to your settings
+## Support & Community
 
-## Configuration
+This plugin is a labor of love, developed and maintained during my free time after work and on weekends. A lot of thought, energy, and care goes into making it reliable, user-friendly, and aligned with PTKM principles.
 
-In the plugin settings, you can configure:
+If you find this plugin valuable in your daily workflow:
 
-- **Default title source**: Choose which source (filename, frontmatter, or heading) should be used as the default when syncing titles
+- If it helps you update titles more effectively
+- If it saves you time and mental energy
 
-## Installation
+Please consider supporting my work. Your support would mean the world to me and would help me dedicate more time and energy to:
 
-### From Obsidian Community Plugins
+- Developing new features
+- Maintaining code quality
+- Providing support and documentation
+- Making the plugin even better for everyone
 
-1. Open Obsidian Settings
-2. Go to Community Plugins and disable Safe Mode
-3. Click Browse and search for "File Title Updater"
-4. Install and enable the plugin
+### Ways to Support
 
-### Manual Installation
+You can support this project in several ways:
 
-1. Download the latest release from the [releases page](https://github.com/wenlzhang/obsidian-file-title-updater/releases)
-2. Extract the zip file to your Obsidian vault's `.obsidian/plugins` folder
-3. Enable the plugin in Obsidian's settings
+- ⭐ Star the project on GitHub
+- 💝 <a href='https://ko-fi.com/C0C66C1TB' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee' /></a>
+- [Sponsor](https://github.com/sponsors/wenlzhang) my work on GitHub
+- 💌 Share your success stories and feedback
+- 📢 Spread the word about the plugin
+- 🐛 [Report issues](https://github.com/wenlzhang/obsidian-file-title-updater/issues) to help improve the plugin
 
-## Support
-
-<a href='https://ko-fi.com/C0C66C1TB' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi1.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+Thank you for being part of this journey! 🙏
