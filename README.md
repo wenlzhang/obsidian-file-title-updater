@@ -28,18 +28,6 @@ The plugin includes several intelligent features:
 - **Handles edge cases**: Properly creates first headings when none exist and provides helpful error messages
 - **Handles illegal characters**: Automatically sanitizes titles when updating filenames to remove or replace characters that aren't allowed in filenames
 
-### Illegal Character Handling
-
-When syncing titles from frontmatter or headings to filenames, some characters aren't allowed in filenames. The plugin provides several options for handling these characters:
-
-- **Remove illegal characters**: Simply removes any characters that aren't allowed in filenames
-- **Replace with space**: Replaces illegal characters with spaces
-- **Replace with dash (-)**: Replaces illegal characters with dashes
-- **Replace with underscore (_)**: Replaces illegal characters with underscores
-- **Custom replacement**: Specify your own character to replace illegal characters with
-
-You can also choose whether to update all titles with the sanitized version or keep the original title in the frontmatter and heading while only sanitizing the filename.
-
 ## Why use this plugin?
 
 Having the same title in multiple places provides redundancy and makes your notes more accessible:
