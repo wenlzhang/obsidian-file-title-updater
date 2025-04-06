@@ -6,7 +6,9 @@
     "scripts": {
         "dev": "node esbuild.config.mjs",
         "build": "npm run prettier && node esbuild.config.mjs production && cp manifest.json build && [ -f styles.css ] && cp styles.css build/ || true",
-        "pretest": "eslint src/",
+        "lint": "eslint src/",
+        "lint:fix": "eslint src/ --fix",
+        "pretest": "npm run lint:fix",
         "test": "jest --passWithNoTests",
         "prettier": "prettier -w 'src/**/*.ts'",
         "preversion": "npm run build && npm run test",
