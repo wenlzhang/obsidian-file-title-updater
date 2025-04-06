@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [0.3.0] - 2025-04-06
+
+### Changes
+
+- Improve release automation
+- Improve release automation
+- Improve code format
+- Update README.md
+- Fine tune settings tab
+- Customize sync sources
+- Update README.md
+- Update README.md
+- Improve code format
+
 ## [0.2.1] - 2025-03-12
 
 ### Changes

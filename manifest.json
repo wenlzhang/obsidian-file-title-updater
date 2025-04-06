@@ -1,7 +1,7 @@
 {
 	"id": "file-title-updater",
 	"name": "File Title Updater",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"minAppVersion": "1.0.0",
 	"description": "Synchronize titles between filename, frontmatter, and first heading in notes.",
 	"author": "wenlzhang",
