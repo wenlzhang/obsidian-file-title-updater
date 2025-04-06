@@ -23,7 +23,8 @@ The plugin provides four commands:
 
 The plugin includes several intelligent features:
 
-- **Detects already synchronized titles**: If all three titles are already the same, the plugin will notify you and skip unnecessary updates
+- **Customizable sync targets**: Choose which title locations to sync (all three, or any pair of two)
+- **Detects already synchronized titles**: If all titles that should be synced are already the same, the plugin will notify you and skip unnecessary updates
 - **Proper spacing**: Ensures exactly one empty line between frontmatter and the first heading
 - **Handles edge cases**: Properly creates first headings when none exist and provides helpful error messages
 - **Handles illegal characters**: Automatically sanitizes titles when updating filenames to remove or replace characters that aren't allowed in filenames
@@ -35,6 +36,8 @@ Having the same title in multiple places provides redundancy and makes your note
 - Consistent filenames make it easier to find notes in your file system
 - Frontmatter titles enable better metadata management and can be used with plugins like Dataview
 - First-level headings provide visual context when reading the note
+
+You can now choose which of these title locations matter most to your workflow and selectively sync between them.
 
 ## Documentation
 
