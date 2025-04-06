@@ -428,8 +428,8 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         content: string,
         title: string,
         file: TFile,
-        updateFrontmatter: boolean = true,
-        updateHeading: boolean = true,
+        updateFrontmatter = true,
+        updateHeading = true,
     ): string {
         let updatedContent = content;
 
