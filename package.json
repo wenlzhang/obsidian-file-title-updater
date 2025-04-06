@@ -11,7 +11,7 @@
         "pretest": "npm run lint:fix",
         "test": "jest --passWithNoTests",
         "prettier": "prettier -w 'src/**/*.ts'",
-        "preversion": "npm run build && npm run test",
+        "preversion": "npm run lint:fix && git add . && git diff-index --quiet HEAD || git commit -m \"🤖 Auto-fix linting issues before version bump\" && npm run build && npm run test",
         "version": "node version-bump.mjs && node version-changelog.mjs && git add manifest.json versions.json CHANGELOG.md && cp manifest.json build/",
         "postversion": "git push && git push --tags && gh release create $npm_package_version -F CHANGELOG.md --draft build/main.js manifest.json $([ -f styles.css ] && echo 'styles.css' || true)"
     },
