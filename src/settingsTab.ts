@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import FileTitleUpdaterPlugin from "./main";
-import { TitleSource, IllegalCharacterHandling } from "./settings";
+import { TitleSource, IllegalCharacterHandling, SyncMode } from "./settings";
 
 export class SettingsTab extends PluginSettingTab {
     plugin: FileTitleUpdaterPlugin;
@@ -27,6 +27,24 @@ export class SettingsTab extends PluginSettingTab {
                     .setValue(this.plugin.settings.defaultTitleSource)
                     .onChange(async (value: TitleSource) => {
                         this.plugin.settings.defaultTitleSource = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+
+        new Setting(containerEl)
+            .setName("Sync mode")
+            .setDesc(
+                "Choose which title locations to sync (which of the three title places to update)",
+            )
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOption(SyncMode.ALL, "All (filename, frontmatter, and heading)")
+                    .addOption(SyncMode.FILENAME_FRONTMATTER, "Filename and frontmatter only")
+                    .addOption(SyncMode.FILENAME_HEADING, "Filename and heading only")
+                    .addOption(SyncMode.FRONTMATTER_HEADING, "Frontmatter and heading only")
+                    .setValue(this.plugin.settings.syncMode)
+                    .onChange(async (value: SyncMode) => {
+                        this.plugin.settings.syncMode = value;
                         await this.plugin.saveSettings();
                     }),
             );

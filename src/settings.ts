@@ -14,11 +14,19 @@ export enum IllegalCharacterHandling {
     CUSTOM = "custom",
 }
 
+export enum SyncMode {
+    ALL = "all",
+    FILENAME_FRONTMATTER = "filename_frontmatter",
+    FILENAME_HEADING = "filename_heading",
+    FRONTMATTER_HEADING = "frontmatter_heading",
+}
+
 export interface PluginSettings {
     defaultTitleSource: TitleSource;
     illegalCharHandling: IllegalCharacterHandling;
     customReplacement: string;
     updateOtherTitlesWithSanitizedVersion: boolean;
+    syncMode: SyncMode;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -26,4 +34,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     illegalCharHandling: IllegalCharacterHandling.REMOVE,
     customReplacement: "",
     updateOtherTitlesWithSanitizedVersion: false,
+    syncMode: SyncMode.ALL,
 };

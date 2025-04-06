@@ -15,6 +15,7 @@ import {
     DEFAULT_SETTINGS,
     TitleSource,
     IllegalCharacterHandling,
+    SyncMode,
 } from "./settings";
 
 export default class FileTitleUpdaterPlugin extends Plugin {
@@ -119,9 +120,9 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         }
 
         try {
-            // Check if all titles are already the same
-            if (await this.areTitlesAlreadySynchronized(activeFile)) {
-                new Notice("All titles are already synchronized");
+            // Check if all titles that are set to be synced are already the same
+            if (await this.areTitlesToSyncAlreadySynchronized(activeFile)) {
+                new Notice("All titles that should be synced are already synchronized");
                 return;
             }
 
@@ -143,7 +144,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         }
     }
 
-    async areTitlesAlreadySynchronized(file: TFile): Promise<boolean> {
+    async areTitlesToSyncAlreadySynchronized(file: TFile): Promise<boolean> {
         // Get filename
         const filename = file.basename;
 
@@ -152,30 +153,52 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             this.app.metadataCache.getFileCache(file)?.frontmatter;
         const frontmatterTitle = frontmatter?.title;
 
-        // If no frontmatter title, they can't all be the same
-        if (!frontmatterTitle) {
-            return false;
-        }
-
-        // Get heading title using MetadataCache instead of regex
+        // Get heading title using MetadataCache
         const headings = this.app.metadataCache.getFileCache(file)?.headings;
         const topLevelHeading = headings?.find((h) => h.level === 1);
         const headingTitle = topLevelHeading?.heading;
 
-        // If no heading, they can't all be the same
-        if (!headingTitle) {
-            return false;
+        // Check based on sync mode
+        switch (this.settings.syncMode) {
+            case SyncMode.ALL:
+                // Need both frontmatter and heading to exist
+                if (!frontmatterTitle || !headingTitle) {
+                    return false;
+                }
+                return (
+                    filename === frontmatterTitle && 
+                    frontmatterTitle === headingTitle
+                );
+            
+            case SyncMode.FILENAME_FRONTMATTER:
+                // Only need frontmatter to exist
+                if (!frontmatterTitle) {
+                    return false;
+                }
+                return filename === frontmatterTitle;
+            
+            case SyncMode.FILENAME_HEADING:
+                // Only need heading to exist
+                if (!headingTitle) {
+                    return false;
+                }
+                return filename === headingTitle;
+            
+            case SyncMode.FRONTMATTER_HEADING:
+                // Need both frontmatter and heading to exist
+                if (!frontmatterTitle || !headingTitle) {
+                    return false;
+                }
+                return frontmatterTitle === headingTitle;
+            
+            default:
+                return false;
         }
-
-        // Check if all three titles are the same
-        return (
-            filename === frontmatterTitle && frontmatterTitle === headingTitle
-        );
     }
 
     async syncFromFilename(file: TFile) {
         const filename = file.basename;
-        await this.updateAllTitles(file, filename);
+        await this.updateTitlesBasedOnSyncMode(file, filename);
     }
 
     async syncFromFrontmatter(file: TFile) {
@@ -198,18 +221,28 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                 new Notice(
                     `Title contains illegal characters. All titles will be updated with the sanitized version: "${sanitizedTitle}"`,
                 );
-                await this.updateAllTitles(file, sanitizedTitle);
+                await this.updateTitlesBasedOnSyncMode(file, sanitizedTitle);
             } else {
                 new Notice(
                     `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
                 );
-                // Update filename with sanitized version, but keep original in frontmatter and heading
-                await this.updateFilename(file, sanitizedTitle);
-                await this.updateFrontmatterAndHeading(file, title);
+                // Only update filename with sanitized version if it's part of sync mode
+                const shouldUpdateFilename = this.settings.syncMode !== SyncMode.FRONTMATTER_HEADING;
+                const shouldUpdateFrontmatter = this.shouldSyncFrontmatter();
+                const shouldUpdateHeading = this.shouldSyncHeading();
+
+                if (shouldUpdateFilename) {
+                    await this.updateFilename(file, sanitizedTitle);
+                }
+                
+                // Keep original in frontmatter and/or heading if they should be synced
+                if (shouldUpdateFrontmatter || shouldUpdateHeading) {
+                    await this.updateFrontmatterAndOrHeading(file, title);
+                }
             }
         } else {
             // No illegal characters, proceed normally
-            await this.updateAllTitles(file, title);
+            await this.updateTitlesBasedOnSyncMode(file, title);
         }
     }
 
@@ -238,18 +271,28 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                 new Notice(
                     `Title contains illegal characters. All titles will be updated with the sanitized version: "${sanitizedTitle}"`,
                 );
-                await this.updateAllTitles(file, sanitizedTitle);
+                await this.updateTitlesBasedOnSyncMode(file, sanitizedTitle);
             } else {
                 new Notice(
                     `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
                 );
-                // Update filename with sanitized version, but keep original in frontmatter and heading
-                await this.updateFilename(file, sanitizedTitle);
-                await this.updateFrontmatterAndHeading(file, title);
+                // Only update filename with sanitized version if it's part of sync mode
+                const shouldUpdateFilename = this.settings.syncMode !== SyncMode.FRONTMATTER_HEADING;
+                const shouldUpdateFrontmatter = this.shouldSyncFrontmatter();
+                const shouldUpdateHeading = this.shouldSyncHeading();
+
+                if (shouldUpdateFilename) {
+                    await this.updateFilename(file, sanitizedTitle);
+                }
+                
+                // Keep original in frontmatter and/or heading if they should be synced
+                if (shouldUpdateFrontmatter || shouldUpdateHeading) {
+                    await this.updateFrontmatterAndOrHeading(file, title);
+                }
             }
         } else {
             // No illegal characters, proceed normally
-            await this.updateAllTitles(file, title);
+            await this.updateTitlesBasedOnSyncMode(file, title);
         }
     }
 
@@ -291,12 +334,33 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         }
     }
 
-    async updateAllTitles(file: TFile, title: string) {
-        // Update filename (if different)
-        await this.updateFilename(file, title);
+    // Helper methods to check which sources to sync based on settings
+    shouldSyncFilename(): boolean {
+        return this.settings.syncMode !== SyncMode.FRONTMATTER_HEADING;
+    }
 
-        // Update file contents (frontmatter and heading)
-        await this.updateFrontmatterAndHeading(file, title);
+    shouldSyncFrontmatter(): boolean {
+        return this.settings.syncMode !== SyncMode.FILENAME_HEADING;
+    }
+
+    shouldSyncHeading(): boolean {
+        return this.settings.syncMode !== SyncMode.FILENAME_FRONTMATTER;
+    }
+
+    async updateTitlesBasedOnSyncMode(file: TFile, title: string) {
+        const shouldUpdateFilename = this.shouldSyncFilename();
+        const shouldUpdateFrontmatter = this.shouldSyncFrontmatter();
+        const shouldUpdateHeading = this.shouldSyncHeading();
+
+        // Update filename if it's part of the sync mode
+        if (shouldUpdateFilename) {
+            await this.updateFilename(file, title);
+        }
+
+        // Update frontmatter and/or heading if they're part of the sync mode
+        if (shouldUpdateFrontmatter || shouldUpdateHeading) {
+            await this.updateFrontmatterAndOrHeading(file, title);
+        }
     }
 
     async updateFilename(file: TFile, title: string) {
@@ -308,10 +372,21 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         }
     }
 
-    async updateFrontmatterAndHeading(file: TFile, title: string) {
+    async updateFrontmatterAndOrHeading(file: TFile, title: string) {
         await this.app.vault.process(file, (fileContents) => {
-            return this.updateFileContents(fileContents, title, file);
+            return this.updateFileContents(
+                fileContents, 
+                title, 
+                file, 
+                this.shouldSyncFrontmatter(), 
+                this.shouldSyncHeading()
+            );
         });
+    }
+
+    // For backward compatibility
+    async updateFrontmatterAndHeading(file: TFile, title: string) {
+        await this.updateFrontmatterAndOrHeading(file, title);
     }
 
     // Helper method to find the position of the first level 1 heading in content
@@ -345,7 +420,13 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         return result;
     }
 
-    updateFileContents(content: string, title: string, file: TFile): string {
+    updateFileContents(
+        content: string, 
+        title: string, 
+        file: TFile,
+        updateFrontmatter: boolean = true,
+        updateHeading: boolean = true
+    ): string {
         let updatedContent = content;
 
         // Check for existing heading first using MetadataCache
@@ -358,137 +439,142 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         const frontMatterInfo = getFrontMatterInfo(updatedContent);
         const hasFrontMatter = frontMatterInfo.exists;
 
-        if (hasFrontMatter) {
-            // Get the frontmatter content
-            const yaml = frontMatterInfo.frontmatter;
+        // Update frontmatter if needed
+        if (updateFrontmatter) {
+            if (hasFrontMatter) {
+                // Get the frontmatter content
+                const yaml = frontMatterInfo.frontmatter;
 
-            try {
-                // Parse the YAML frontmatter
-                const frontmatter = parseYaml(yaml) || {};
+                try {
+                    // Parse the YAML frontmatter
+                    const frontmatter = parseYaml(yaml) || {};
 
-                // Update the title property
-                frontmatter.title = title;
+                    // Update the title property
+                    frontmatter.title = title;
 
-                // Convert back to YAML string
-                const updatedFrontmatter = stringifyYaml(frontmatter);
-
-                // Replace the frontmatter in the content
-                updatedContent =
-                    updatedContent.substring(0, frontMatterInfo.from) +
-                    updatedFrontmatter +
-                    updatedContent.substring(frontMatterInfo.to);
-            } catch (e) {
-                // Fallback to regex if YAML parsing fails
-                console.error("Error parsing frontmatter:", e);
-                const titleRegex = /^title:\s*(.*)$/m;
-                const titleMatch = yaml.match(titleRegex);
-
-                if (titleMatch) {
-                    // Update existing title in frontmatter
-                    const updatedFrontmatter = yaml.replace(
-                        titleRegex,
-                        `title: ${title}`,
-                    );
+                    // Convert back to YAML string
+                    const updatedFrontmatter = stringifyYaml(frontmatter);
 
                     // Replace the frontmatter in the content
                     updatedContent =
                         updatedContent.substring(0, frontMatterInfo.from) +
                         updatedFrontmatter +
                         updatedContent.substring(frontMatterInfo.to);
-                } else {
-                    // Add title to existing frontmatter
-                    const updatedFrontmatter = `title: ${title}\n${yaml}`;
+                } catch (e) {
+                    // Fallback to regex if YAML parsing fails
+                    console.error("Error parsing frontmatter:", e);
+                    const titleRegex = /^title:\s*(.*)$/m;
+                    const titleMatch = yaml.match(titleRegex);
 
-                    // Replace the frontmatter in the content
-                    updatedContent =
-                        updatedContent.substring(0, frontMatterInfo.from) +
-                        updatedFrontmatter +
-                        updatedContent.substring(frontMatterInfo.to);
+                    if (titleMatch) {
+                        // Update existing title in frontmatter
+                        const updatedFrontmatter = yaml.replace(
+                            titleRegex,
+                            `title: ${title}`,
+                        );
+
+                        // Replace the frontmatter in the content
+                        updatedContent =
+                            updatedContent.substring(0, frontMatterInfo.from) +
+                            updatedFrontmatter +
+                            updatedContent.substring(frontMatterInfo.to);
+                    } else {
+                        // Add title to existing frontmatter
+                        const updatedFrontmatter = `title: ${title}\n${yaml}`;
+
+                        // Replace the frontmatter in the content
+                        updatedContent =
+                            updatedContent.substring(0, frontMatterInfo.from) +
+                            updatedFrontmatter +
+                            updatedContent.substring(frontMatterInfo.to);
+                    }
                 }
-            }
-        } else {
-            // Add new frontmatter with title
-            const frontmatter = { title: title };
-            const yaml = stringifyYaml(frontmatter);
+            } else if (updateFrontmatter) {
+                // Add new frontmatter with title
+                const frontmatter = { title: title };
+                const yaml = stringifyYaml(frontmatter);
 
-            if (hasHeading && headingPos >= 0) {
-                // If there's a heading, insert frontmatter before it
-                // Create frontmatter content properly
-                const frontMatterContent = `---\n${yaml}---\n\n`;
+                if (hasHeading && headingPos >= 0) {
+                    // If there's a heading, insert frontmatter before it
+                    // Create frontmatter content properly
+                    const frontMatterContent = `---\n${yaml}---\n\n`;
 
-                updatedContent =
-                    frontMatterContent +
-                    updatedContent.substring(0, headingPos).trim() +
-                    (headingPos > 0 ? "\n\n" : "") +
-                    updatedContent.substring(headingPos);
-            } else {
-                // No heading, just add frontmatter at the beginning
-                const frontMatterContent = `---\n${yaml}---\n\n`;
-                updatedContent = frontMatterContent + updatedContent;
+                    updatedContent =
+                        frontMatterContent +
+                        updatedContent.substring(0, headingPos).trim() +
+                        (headingPos > 0 ? "\n\n" : "") +
+                        updatedContent.substring(headingPos);
+                } else {
+                    // No heading, just add frontmatter at the beginning
+                    const frontMatterContent = `---\n${yaml}---\n\n`;
+                    updatedContent = frontMatterContent + updatedContent;
+                }
             }
         }
 
-        // Update or add first level 1 heading
-        // Need to re-check frontmatter info after our modifications
-        const updatedFrontMatterInfo = getFrontMatterInfo(updatedContent);
-        const contentStartsWithFrontmatter = updatedFrontMatterInfo.exists;
+        // Update heading if needed
+        if (updateHeading) {
+            // Need to re-check frontmatter info after our modifications
+            const updatedFrontMatterInfo = getFrontMatterInfo(updatedContent);
+            const contentStartsWithFrontmatter = updatedFrontMatterInfo.exists;
 
-        // We need to use regex for heading detection after modifications since file cache won't be updated yet
-        const headingRegex = /^#\s+(.+)$/m;
-        const updatedHeadingMatch = updatedContent.match(headingRegex);
+            // We need to use regex for heading detection after modifications since file cache won't be updated yet
+            const headingRegex = /^#\s+(.+)$/m;
+            const updatedHeadingMatch = updatedContent.match(headingRegex);
 
-        if (updatedHeadingMatch) {
-            // Extract the heading position and line
-            const headingLine = updatedHeadingMatch[0];
-            const headingIndex = updatedContent.indexOf(headingLine);
+            if (updatedHeadingMatch) {
+                // Extract the heading position and line
+                const headingLine = updatedHeadingMatch[0];
+                const headingIndex = updatedContent.indexOf(headingLine);
 
-            // Replace the specific heading text while preserving its position
-            updatedContent =
-                updatedContent.substring(0, headingIndex) +
-                `# ${title}` +
-                updatedContent.substring(headingIndex + headingLine.length);
-        } else {
-            // Add heading after frontmatter
-            if (contentStartsWithFrontmatter) {
-                // contentStart is the position where the content starts after the frontmatter block
-                const contentStartPos = updatedFrontMatterInfo.contentStart;
-
-                // Check if there's content after frontmatter
-                const afterFrontmatter = updatedContent
-                    .substring(contentStartPos)
-                    .trim();
-
-                if (afterFrontmatter.length > 0) {
-                    // Insert heading between frontmatter and content with exactly one empty line
-                    updatedContent =
-                        updatedContent.substring(0, contentStartPos) +
-                        `\n# ${title}\n\n` +
-                        afterFrontmatter;
-                } else {
-                    // Just add heading after frontmatter with exactly one empty line
-                    updatedContent =
-                        updatedContent.substring(0, contentStartPos) +
-                        `\n# ${title}`;
-                }
-
-                // Ensure proper spacing between frontmatter and heading by using string operations
-                // instead of regex to normalize the spacing
-                const endOfFrontMatter = updatedFrontMatterInfo.to;
-                const textAfterFrontMatter =
-                    updatedContent.substring(endOfFrontMatter);
-
-                // Normalize spacing to exactly one newline after frontmatter
+                // Replace the specific heading text while preserving its position
                 updatedContent =
-                    updatedContent.substring(0, endOfFrontMatter) +
-                    "\n\n" +
-                    textAfterFrontMatter.trimStart();
-            } else {
-                // No frontmatter, add heading at the beginning
-                const contentTrimmed = updatedContent.trim();
-                if (contentTrimmed.length > 0) {
-                    updatedContent = `# ${title}\n\n${contentTrimmed}`;
+                    updatedContent.substring(0, headingIndex) +
+                    `# ${title}` +
+                    updatedContent.substring(headingIndex + headingLine.length);
+            } else if (updateHeading) {
+                // Add heading after frontmatter
+                if (contentStartsWithFrontmatter) {
+                    // contentStart is the position where the content starts after the frontmatter block
+                    const contentStartPos = updatedFrontMatterInfo.contentStart;
+
+                    // Check if there's content after frontmatter
+                    const afterFrontmatter = updatedContent
+                        .substring(contentStartPos)
+                        .trim();
+
+                    if (afterFrontmatter.length > 0) {
+                        // Insert heading between frontmatter and content with exactly one empty line
+                        updatedContent =
+                            updatedContent.substring(0, contentStartPos) +
+                            `\n# ${title}\n\n` +
+                            afterFrontmatter;
+                    } else {
+                        // Just add heading after frontmatter with exactly one empty line
+                        updatedContent =
+                            updatedContent.substring(0, contentStartPos) +
+                            `\n# ${title}`;
+                    }
+
+                    // Ensure proper spacing between frontmatter and heading by using string operations
+                    // instead of regex to normalize the spacing
+                    const endOfFrontMatter = updatedFrontMatterInfo.to;
+                    const textAfterFrontMatter =
+                        updatedContent.substring(endOfFrontMatter);
+
+                    // Normalize spacing to exactly one newline after frontmatter
+                    updatedContent =
+                        updatedContent.substring(0, endOfFrontMatter) +
+                        "\n\n" +
+                        textAfterFrontMatter.trimStart();
                 } else {
-                    updatedContent = `# ${title}`;
+                    // No frontmatter, add heading at the beginning
+                    const contentTrimmed = updatedContent.trim();
+                    if (contentTrimmed.length > 0) {
+                        updatedContent = `# ${title}\n\n${contentTrimmed}`;
+                    } else {
+                        updatedContent = `# ${title}`;
+                    }
                 }
             }
         }
