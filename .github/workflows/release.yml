@@ -23,18 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Lint and auto-fix
-        run: npx eslint "src/**/*.ts" --fix
-      
-      - name: Commit linting fixes if any
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Auto-fix linting issues"
-          git push
-        continue-on-error: true
-        
       - name: Build
         run: npm run build
         
