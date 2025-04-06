@@ -122,7 +122,9 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         try {
             // Check if all titles that are set to be synced are already the same
             if (await this.areTitlesToSyncAlreadySynchronized(activeFile)) {
-                new Notice("All titles that should be synced are already synchronized");
+                new Notice(
+                    "All titles that should be synced are already synchronized",
+                );
                 return;
             }
 
@@ -166,31 +168,31 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     return false;
                 }
                 return (
-                    filename === frontmatterTitle && 
+                    filename === frontmatterTitle &&
                     frontmatterTitle === headingTitle
                 );
-            
+
             case SyncMode.FILENAME_FRONTMATTER:
                 // Only need frontmatter to exist
                 if (!frontmatterTitle) {
                     return false;
                 }
                 return filename === frontmatterTitle;
-            
+
             case SyncMode.FILENAME_HEADING:
                 // Only need heading to exist
                 if (!headingTitle) {
                     return false;
                 }
                 return filename === headingTitle;
-            
+
             case SyncMode.FRONTMATTER_HEADING:
                 // Need both frontmatter and heading to exist
                 if (!frontmatterTitle || !headingTitle) {
                     return false;
                 }
                 return frontmatterTitle === headingTitle;
-            
+
             default:
                 return false;
         }
@@ -227,14 +229,15 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
                 );
                 // Only update filename with sanitized version if it's part of sync mode
-                const shouldUpdateFilename = this.settings.syncMode !== SyncMode.FRONTMATTER_HEADING;
+                const shouldUpdateFilename =
+                    this.settings.syncMode !== SyncMode.FRONTMATTER_HEADING;
                 const shouldUpdateFrontmatter = this.shouldSyncFrontmatter();
                 const shouldUpdateHeading = this.shouldSyncHeading();
 
                 if (shouldUpdateFilename) {
                     await this.updateFilename(file, sanitizedTitle);
                 }
-                
+
                 // Keep original in frontmatter and/or heading if they should be synced
                 if (shouldUpdateFrontmatter || shouldUpdateHeading) {
                     await this.updateFrontmatterAndOrHeading(file, title);
@@ -277,14 +280,15 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
                 );
                 // Only update filename with sanitized version if it's part of sync mode
-                const shouldUpdateFilename = this.settings.syncMode !== SyncMode.FRONTMATTER_HEADING;
+                const shouldUpdateFilename =
+                    this.settings.syncMode !== SyncMode.FRONTMATTER_HEADING;
                 const shouldUpdateFrontmatter = this.shouldSyncFrontmatter();
                 const shouldUpdateHeading = this.shouldSyncHeading();
 
                 if (shouldUpdateFilename) {
                     await this.updateFilename(file, sanitizedTitle);
                 }
-                
+
                 // Keep original in frontmatter and/or heading if they should be synced
                 if (shouldUpdateFrontmatter || shouldUpdateHeading) {
                     await this.updateFrontmatterAndOrHeading(file, title);
@@ -375,11 +379,11 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     async updateFrontmatterAndOrHeading(file: TFile, title: string) {
         await this.app.vault.process(file, (fileContents) => {
             return this.updateFileContents(
-                fileContents, 
-                title, 
-                file, 
-                this.shouldSyncFrontmatter(), 
-                this.shouldSyncHeading()
+                fileContents,
+                title,
+                file,
+                this.shouldSyncFrontmatter(),
+                this.shouldSyncHeading(),
             );
         });
     }
@@ -421,11 +425,11 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     }
 
     updateFileContents(
-        content: string, 
-        title: string, 
+        content: string,
+        title: string,
         file: TFile,
         updateFrontmatter: boolean = true,
-        updateHeading: boolean = true
+        updateHeading: boolean = true,
     ): string {
         let updatedContent = content;
 

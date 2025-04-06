@@ -38,10 +38,19 @@ export class SettingsTab extends PluginSettingTab {
             )
             .addDropdown((dropdown) =>
                 dropdown
-                    .addOption(SyncMode.ALL, "All (Filename + Frontmatter + Heading)")
-                    .addOption(SyncMode.FILENAME_FRONTMATTER, "Filename + Frontmatter")
+                    .addOption(
+                        SyncMode.ALL,
+                        "All (Filename + Frontmatter + Heading)",
+                    )
+                    .addOption(
+                        SyncMode.FILENAME_FRONTMATTER,
+                        "Filename + Frontmatter",
+                    )
                     .addOption(SyncMode.FILENAME_HEADING, "Filename + Heading")
-                    .addOption(SyncMode.FRONTMATTER_HEADING, "Frontmatter + Heading")
+                    .addOption(
+                        SyncMode.FRONTMATTER_HEADING,
+                        "Frontmatter + Heading",
+                    )
                     .setValue(this.plugin.settings.syncMode)
                     .onChange(async (value: SyncMode) => {
                         this.plugin.settings.syncMode = value;
