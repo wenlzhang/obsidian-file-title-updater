@@ -489,7 +489,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                             updatedContent.substring(frontMatterInfo.to);
                     }
                 }
-            } else if (updateFrontmatter) {
+            } else {
                 // Add new frontmatter with title
                 const frontmatter = { title: title };
                 const yaml = stringifyYaml(frontmatter);
@@ -532,7 +532,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     updatedContent.substring(0, headingIndex) +
                     `# ${title}` +
                     updatedContent.substring(headingIndex + headingLine.length);
-            } else if (updateHeading) {
+            } else {
                 // Add heading after frontmatter
                 if (contentStartsWithFrontmatter) {
                     // contentStart is the position where the content starts after the frontmatter block
