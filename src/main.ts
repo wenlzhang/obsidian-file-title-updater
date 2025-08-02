@@ -1,6 +1,7 @@
 import {
     Plugin,
     TFile,
+    TFolder,
     Notice,
     Editor,
     MarkdownView,
@@ -95,6 +96,59 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                 return false;
             },
         });
+
+        // Register folder context menu for bulk title updates
+        this.registerEvent(
+            this.app.workspace.on("file-menu", (menu, file) => {
+                if (file instanceof TFolder) {
+                    menu.addItem((item) => {
+                        item.setTitle("Sync titles in folder (default source)")
+                            .setIcon("sync")
+                            .onClick(async () => {
+                                await this.syncTitlesInFolder(
+                                    file,
+                                    this.settings.defaultTitleSource,
+                                );
+                            });
+                    });
+
+                    menu.addItem((item) => {
+                        item.setTitle("Sync titles in folder (from filename)")
+                            .setIcon("file-text")
+                            .onClick(async () => {
+                                await this.syncTitlesInFolder(
+                                    file,
+                                    TitleSource.FILENAME,
+                                );
+                            });
+                    });
+
+                    menu.addItem((item) => {
+                        item.setTitle(
+                            "Sync titles in folder (from frontmatter)",
+                        )
+                            .setIcon("tag")
+                            .onClick(async () => {
+                                await this.syncTitlesInFolder(
+                                    file,
+                                    TitleSource.FRONTMATTER,
+                                );
+                            });
+                    });
+
+                    menu.addItem((item) => {
+                        item.setTitle("Sync titles in folder (from heading)")
+                            .setIcon("heading")
+                            .onClick(async () => {
+                                await this.syncTitlesInFolder(
+                                    file,
+                                    TitleSource.HEADING,
+                                );
+                            });
+                    });
+                }
+            }),
+        );
     }
 
     onunload() {
@@ -159,6 +213,88 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             );
             console.error("Error synchronizing titles:", error);
         }
+    }
+
+    async syncTitlesInFolder(folder: TFolder, source: TitleSource) {
+        try {
+            // Get all markdown files in the folder and its subfolders recursively
+            const markdownFiles = this.getAllMarkdownFilesInFolder(folder);
+
+            if (markdownFiles.length === 0) {
+                this.notificationHelper.showInfo(
+                    `No markdown files found in folder "${folder.name}"`,
+                );
+                return;
+            }
+
+            let processedCount = 0;
+            let skippedCount = 0;
+            let errorCount = 0;
+
+            this.notificationHelper.showInfo(
+                `Starting bulk title sync for ${markdownFiles.length} files in "${folder.name}"...`,
+            );
+
+            // Process each file
+            for (const file of markdownFiles) {
+                try {
+                    // Check if titles are already synchronized for this file
+                    if (await this.areTitlesToSyncAlreadySynchronized(file)) {
+                        skippedCount++;
+                        continue;
+                    }
+
+                    // Sync titles for this file using the same logic as single file sync
+                    switch (source) {
+                        case TitleSource.FILENAME:
+                            await this.syncFromFilename(file);
+                            break;
+                        case TitleSource.FRONTMATTER:
+                            await this.syncFromFrontmatter(file);
+                            break;
+                        case TitleSource.HEADING:
+                            await this.syncFromHeading(file);
+                            break;
+                    }
+
+                    processedCount++;
+                } catch (error) {
+                    errorCount++;
+                    console.error(`Error processing file ${file.path}:`, error);
+                }
+            }
+
+            // Show summary notification
+            const summary = `Bulk sync completed: ${processedCount} updated, ${skippedCount} skipped, ${errorCount} errors`;
+            if (errorCount > 0) {
+                this.notificationHelper.showError(summary);
+            } else {
+                this.notificationHelper.showSuccess(summary);
+            }
+        } catch (error) {
+            this.notificationHelper.showError(
+                `Error during bulk title sync: ${error.message}`,
+            );
+            console.error("Error during bulk title sync:", error);
+        }
+    }
+
+    getAllMarkdownFilesInFolder(folder: TFolder): TFile[] {
+        const markdownFiles: TFile[] = [];
+
+        // Recursively traverse the folder and collect all markdown files
+        const traverse = (currentFolder: TFolder) => {
+            for (const child of currentFolder.children) {
+                if (child instanceof TFile && child.extension === "md") {
+                    markdownFiles.push(child);
+                } else if (child instanceof TFolder) {
+                    traverse(child);
+                }
+            }
+        };
+
+        traverse(folder);
+        return markdownFiles;
     }
 
     async areTitlesToSyncAlreadySynchronized(file: TFile): Promise<boolean> {
