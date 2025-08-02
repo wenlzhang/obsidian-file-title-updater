@@ -25,7 +25,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        
+
         // Initialize notification helper
         this.notificationHelper = new NotificationHelper(this.settings);
 
@@ -150,9 +150,13 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     await this.syncFromHeading(activeFile);
                     break;
             }
-            this.notificationHelper.showSuccess("Titles synchronized successfully");
+            this.notificationHelper.showSuccess(
+                "Titles synchronized successfully",
+            );
         } catch (error) {
-            this.notificationHelper.showError(`Error synchronizing titles: ${error.message}`);
+            this.notificationHelper.showError(
+                `Error synchronizing titles: ${error.message}`,
+            );
             console.error("Error synchronizing titles:", error);
         }
     }
