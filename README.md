@@ -2,7 +2,7 @@
 
 [![GitHub release (Latest by date)](https://img.shields.io/github/v/release/wenlzhang/obsidian-file-title-updater)](https://github.com/wenlzhang/obsidian-file-title-updater/releases) ![GitHub all releases](https://img.shields.io/github/downloads/wenlzhang/obsidian-file-title-updater/total?color=success)
 
-An [Obsidian](https://obsidian.md) plugin that synchronizes titles between filename, frontmatter, and first heading in your notes.
+An [Obsidian](https://obsidian.md) plugin that synchronizes titles between filename, frontmatter, and first heading in your notes. Works on individual files or entire folders with subfolders.
 
 ## Features
 
@@ -12,12 +12,29 @@ This plugin helps maintain consistency between the three places where a note's t
 2. The `title` field in the frontmatter
 3. The first level 1 heading (`#`) in the note
 
-The plugin provides four commands:
+### Individual File Commands
+
+The plugin provides four commands for working with individual files:
 
 - **Sync titles using default source**: Uses the default source (configurable in settings) to update all other title locations
 - **Sync titles using filename as source**: Uses the filename to update frontmatter title and first heading
 - **Sync titles using frontmatter as source**: Uses the frontmatter title to update filename and first heading
 - **Sync titles using first heading as source**: Uses the first level 1 heading to update filename and frontmatter title
+
+### Bulk Folder Operations
+
+> [!WARNING]
+> Since this bulk updating feature will operate on many files, there is no way to revert changes. Please use this feature with caution and ensure you back up your files before proceeding.
+
+For efficient management of large note collections, you can also sync titles for entire folders:
+
+- **Right-click on any folder** in the file explorer to access bulk sync options
+- **Sync titles in folder (default source)**: Updates all markdown files in the folder and subfolders using your default source
+- **Sync titles in folder (from filename)**: Bulk updates using filenames as the source
+- **Sync titles in folder (from frontmatter)**: Bulk updates using frontmatter titles as the source
+- **Sync titles in folder (from heading)**: Bulk updates using first headings as the source
+
+The bulk operations work recursively, processing all markdown files in the selected folder and any nested subfolders at any depth.
 
 ### Smart Behavior
 
