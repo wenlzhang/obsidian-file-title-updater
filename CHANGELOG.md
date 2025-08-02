@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [0.5.0] - 2025-08-02
+
+### Changes
+
+- docs: add bulk folder operations and update plugin description
+- feat: add bulk title sync functionality for folders via context menu
+- Improve code format
+
 ## [0.4.0] - 2025-08-02
 
 ### Changes
