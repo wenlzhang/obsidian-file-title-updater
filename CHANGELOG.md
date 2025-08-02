@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [0.4.0] - 2025-08-02
+
+### Changes
+
+- feat: add configurable notification system with mobile-specific preferences
+- Update release.yml
+- Improve release automation
+- Improve code format
+
 ## [0.3.0] - 2025-04-06
 
 ### Changes
