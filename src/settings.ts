@@ -27,6 +27,17 @@ export interface PluginSettings {
     customReplacement: string;
     updateOtherTitlesWithSanitizedVersion: boolean;
     syncMode: SyncMode;
+    /**
+     * Notification preferences for sync operations.
+     * Options: "all" (show all notifications), "errors" (errors only), "none" (no notifications)
+     */
+    notificationPreference: "all" | "errors" | "none";
+    /**
+     * Separate notification preferences for mobile devices.
+     * If null, uses the same preference as desktop (notificationPreference).
+     * Options: "all" (show all notifications), "errors" (errors only), "none" (no notifications)
+     */
+    mobileNotificationPreference: "all" | "errors" | "none" | null;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -35,4 +46,6 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     customReplacement: "",
     updateOtherTitlesWithSanitizedVersion: false,
     syncMode: SyncMode.ALL,
+    notificationPreference: "all",
+    mobileNotificationPreference: null,
 };

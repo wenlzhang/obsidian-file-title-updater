@@ -17,12 +17,17 @@ import {
     IllegalCharacterHandling,
     SyncMode,
 } from "./settings";
+import { NotificationHelper } from "./notificationHelper";
 
 export default class FileTitleUpdaterPlugin extends Plugin {
     settings: PluginSettings;
+    notificationHelper: NotificationHelper;
 
     async onload() {
         await this.loadSettings();
+        
+        // Initialize notification helper
+        this.notificationHelper = new NotificationHelper(this.settings);
 
         // Add settings tab
         this.addSettingTab(new SettingsTab(this.app, this));
@@ -102,10 +107,16 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             DEFAULT_SETTINGS,
             await this.loadData(),
         );
+        // Reinitialize notification helper with updated settings
+        if (this.notificationHelper) {
+            this.notificationHelper = new NotificationHelper(this.settings);
+        }
     }
 
     async saveSettings() {
         await this.saveData(this.settings);
+        // Reinitialize notification helper with updated settings
+        this.notificationHelper = new NotificationHelper(this.settings);
     }
 
     syncTitlesWithDefault() {
@@ -115,14 +126,14 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     async syncTitles(source: TitleSource) {
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile) {
-            new Notice("No active file");
+            this.notificationHelper.showError("No active file");
             return;
         }
 
         try {
             // Check if all titles that are set to be synced are already the same
             if (await this.areTitlesToSyncAlreadySynchronized(activeFile)) {
-                new Notice(
+                this.notificationHelper.showInfo(
                     "All titles that should be synced are already synchronized",
                 );
                 return;
@@ -139,9 +150,9 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     await this.syncFromHeading(activeFile);
                     break;
             }
-            new Notice("Titles synchronized successfully");
+            this.notificationHelper.showSuccess("Titles synchronized successfully");
         } catch (error) {
-            new Notice(`Error synchronizing titles: ${error.message}`);
+            this.notificationHelper.showError(`Error synchronizing titles: ${error.message}`);
             console.error("Error synchronizing titles:", error);
         }
     }
@@ -220,12 +231,12 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         if (sanitizedTitle !== title) {
             // If we should update all titles with the sanitized version
             if (this.settings.updateOtherTitlesWithSanitizedVersion) {
-                new Notice(
+                this.notificationHelper.showInfo(
                     `Title contains illegal characters. All titles will be updated with the sanitized version: "${sanitizedTitle}"`,
                 );
                 await this.updateTitlesBasedOnSyncMode(file, sanitizedTitle);
             } else {
-                new Notice(
+                this.notificationHelper.showInfo(
                     `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
                 );
                 // Only update filename with sanitized version if it's part of sync mode
@@ -271,12 +282,12 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         if (sanitizedTitle !== title) {
             // If we should update all titles with the sanitized version
             if (this.settings.updateOtherTitlesWithSanitizedVersion) {
-                new Notice(
+                this.notificationHelper.showInfo(
                     `Title contains illegal characters. All titles will be updated with the sanitized version: "${sanitizedTitle}"`,
                 );
                 await this.updateTitlesBasedOnSyncMode(file, sanitizedTitle);
             } else {
-                new Notice(
+                this.notificationHelper.showInfo(
                     `Title contains illegal characters. Filename will be sanitized to: "${sanitizedTitle}"`,
                 );
                 // Only update filename with sanitized version if it's part of sync mode
