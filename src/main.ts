@@ -19,6 +19,7 @@ import {
     SyncMode,
 } from "./settings";
 import { NotificationHelper } from "./notificationHelper";
+import { BulkUpdateConfirmationModal } from "./confirmationModal";
 
 export default class FileTitleUpdaterPlugin extends Plugin {
     settings: PluginSettings;
@@ -105,9 +106,10 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                         item.setTitle("Sync titles in folder (default source)")
                             .setIcon("sync")
                             .onClick(async () => {
-                                await this.syncTitlesInFolder(
+                                this.showBulkUpdateConfirmation(
                                     file,
                                     this.settings.defaultTitleSource,
+                                    "default source",
                                 );
                             });
                     });
@@ -116,9 +118,10 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                         item.setTitle("Sync titles in folder (from filename)")
                             .setIcon("file-text")
                             .onClick(async () => {
-                                await this.syncTitlesInFolder(
+                                this.showBulkUpdateConfirmation(
                                     file,
                                     TitleSource.FILENAME,
+                                    "filename",
                                 );
                             });
                     });
@@ -129,9 +132,10 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                         )
                             .setIcon("tag")
                             .onClick(async () => {
-                                await this.syncTitlesInFolder(
+                                this.showBulkUpdateConfirmation(
                                     file,
                                     TitleSource.FRONTMATTER,
+                                    "frontmatter",
                                 );
                             });
                     });
@@ -140,9 +144,10 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                         item.setTitle("Sync titles in folder (from heading)")
                             .setIcon("heading")
                             .onClick(async () => {
-                                await this.syncTitlesInFolder(
+                                this.showBulkUpdateConfirmation(
                                     file,
                                     TitleSource.HEADING,
+                                    "first heading",
                                 );
                             });
                     });
@@ -213,6 +218,40 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             );
             console.error("Error synchronizing titles:", error);
         }
+    }
+
+    showBulkUpdateConfirmation(
+        folder: TFolder,
+        source: TitleSource,
+        sourceDisplayName: string,
+    ) {
+        // Get all markdown files to show accurate count in confirmation
+        const markdownFiles = this.getAllMarkdownFilesInFolder(folder);
+
+        if (markdownFiles.length === 0) {
+            this.notificationHelper.showInfo(
+                `No markdown files found in folder "${folder.name}"`,
+            );
+            return;
+        }
+
+        // Show confirmation modal
+        const modal = new BulkUpdateConfirmationModal(
+            this.app,
+            folder.name,
+            markdownFiles.length,
+            sourceDisplayName,
+            // onConfirm callback
+            async () => {
+                await this.syncTitlesInFolder(folder, source);
+            },
+            // onCancel callback
+            () => {
+                // User cancelled, do nothing
+            },
+        );
+
+        modal.open();
     }
 
     async syncTitlesInFolder(folder: TFolder, source: TitleSource) {
