@@ -28,6 +28,16 @@ export interface PluginSettings {
     updateOtherTitlesWithSanitizedVersion: boolean;
     syncMode: SyncMode;
     /**
+     * Frontmatter title field configuration.
+     * Options: "default" (uses "title"), "custom" (uses customFrontmatterField)
+     */
+    frontmatterTitleField: "default" | "custom";
+    /**
+     * Custom frontmatter field name for the title when frontmatterTitleField is "custom".
+     * For example: "Titel", "heading", "name", etc.
+     */
+    customFrontmatterField: string;
+    /**
      * Notification preferences for sync operations.
      * Options: "all" (show all notifications), "errors" (errors only), "none" (no notifications)
      */
@@ -46,6 +56,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     customReplacement: "",
     updateOtherTitlesWithSanitizedVersion: false,
     syncMode: SyncMode.ALL,
+    frontmatterTitleField: "default",
+    customFrontmatterField: "title",
     notificationPreference: "all",
     mobileNotificationPreference: null,
 };

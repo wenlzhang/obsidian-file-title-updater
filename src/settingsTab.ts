@@ -58,12 +58,64 @@ export class SettingsTab extends PluginSettingTab {
                     }),
             );
 
+        // Frontmatter configuration section
         new Setting(containerEl)
-            .setName("Illegal character handling")
+            .setName("Frontmatter")
             .setHeading();
 
         new Setting(containerEl)
-            .setName("Illegal character handling")
+            .setName("Frontmatter title field")
+            .setDesc(
+                "Choose the frontmatter field name for storing the title. Use 'Default' for 'title' or 'Custom' to specify your own.",
+            )
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOption("default", "Default (title)")
+                    .addOption("custom", "Custom")
+                    .setValue(this.plugin.settings.frontmatterTitleField)
+                    .onChange(async (value: "default" | "custom") => {
+                        this.plugin.settings.frontmatterTitleField = value;
+
+                        // Show/hide custom field setting based on selection
+                        if (value === "custom") {
+                            customFieldSetting.settingEl.style.display =
+                                "block";
+                        } else {
+                            customFieldSetting.settingEl.style.display = "none";
+                        }
+
+                        await this.plugin.saveSettings();
+                    }),
+            );
+
+        const customFieldSetting = new Setting(containerEl)
+            .setName("Custom field name")
+            .setDesc(
+                "Specify the custom frontmatter field name to use for the title. This field will be used instead of 'title'.",
+            )
+            .addText((text) =>
+                text
+                    .setPlaceholder("title")
+                    .setValue(this.plugin.settings.customFrontmatterField)
+                    .onChange(async (value) => {
+                        // Ensure the field name is not empty, default to "title"
+                        this.plugin.settings.customFrontmatterField =
+                            value.trim() || "title";
+                        await this.plugin.saveSettings();
+                    }),
+            );
+
+        // Initially hide/show based on current setting
+        if (this.plugin.settings.frontmatterTitleField !== "custom") {
+            customFieldSetting.settingEl.style.display = "none";
+        }
+
+        new Setting(containerEl)
+            .setName("Illegal characters")
+            .setHeading();
+
+        new Setting(containerEl)
+            .setName("Illegal characters handling")
             .setDesc(
                 "Choose how to handle illegal characters when updating filenames",
             )

@@ -178,6 +178,16 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         this.notificationHelper = new NotificationHelper(this.settings);
     }
 
+    /**
+     * Get the frontmatter title field name based on settings.
+     * Returns "title" for default, or the custom field name if configured.
+     */
+    private getFrontmatterTitleField(): string {
+        return this.settings.frontmatterTitleField === "default"
+            ? "title"
+            : this.settings.customFrontmatterField;
+    }
+
     syncTitlesWithDefault() {
         this.syncTitles(this.settings.defaultTitleSource);
     }
@@ -343,7 +353,8 @@ export default class FileTitleUpdaterPlugin extends Plugin {
         // Get frontmatter title
         const frontmatter =
             this.app.metadataCache.getFileCache(file)?.frontmatter;
-        const frontmatterTitle = frontmatter?.title;
+        const titleField = this.getFrontmatterTitleField();
+        const frontmatterTitle = frontmatter?.[titleField];
 
         // Get heading title using MetadataCache
         const headings = this.app.metadataCache.getFileCache(file)?.headings;
@@ -396,11 +407,12 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     async syncFromFrontmatter(file: TFile) {
         const frontmatter =
             this.app.metadataCache.getFileCache(file)?.frontmatter;
-        if (!frontmatter || !frontmatter.title) {
-            throw new Error("No title found in frontmatter");
+        const titleField = this.getFrontmatterTitleField();
+        if (!frontmatter || !frontmatter[titleField]) {
+            throw new Error(`No "${titleField}" found in frontmatter`);
         }
 
-        const title = frontmatter.title;
+        const title = frontmatter[titleField];
 
         // When syncing from frontmatter to filename, we need to sanitize the title
         // for illegal characters that aren't allowed in filenames
@@ -644,7 +656,8 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     const frontmatter = parseYaml(yaml) || {};
 
                     // Update the title property
-                    frontmatter.title = title;
+                    const titleField = this.getFrontmatterTitleField();
+                    frontmatter[titleField] = title;
 
                     // Convert back to YAML string
                     const updatedFrontmatter = stringifyYaml(frontmatter);
@@ -657,14 +670,18 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                 } catch (e) {
                     // Fallback to regex if YAML parsing fails
                     console.error("Error parsing frontmatter:", e);
-                    const titleRegex = /^title:\s*(.*)$/m;
+                    const titleField = this.getFrontmatterTitleField();
+                    const titleRegex = new RegExp(
+                        `^${titleField}:\\s*(.*)$`,
+                        "m",
+                    );
                     const titleMatch = yaml.match(titleRegex);
 
                     if (titleMatch) {
                         // Update existing title in frontmatter
                         const updatedFrontmatter = yaml.replace(
                             titleRegex,
-                            `title: ${title}`,
+                            `${titleField}: ${title}`,
                         );
 
                         // Replace the frontmatter in the content
@@ -674,7 +691,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                             updatedContent.substring(frontMatterInfo.to);
                     } else {
                         // Add title to existing frontmatter
-                        const updatedFrontmatter = `title: ${title}\n${yaml}`;
+                        const updatedFrontmatter = `${titleField}: ${title}\n${yaml}`;
 
                         // Replace the frontmatter in the content
                         updatedContent =
@@ -685,7 +702,8 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                 }
             } else {
                 // Add new frontmatter with title
-                const frontmatter = { title: title };
+                const titleField = this.getFrontmatterTitleField();
+                const frontmatter = { [titleField]: title };
                 const yaml = stringifyYaml(frontmatter);
 
                 if (hasHeading && headingPos >= 0) {
