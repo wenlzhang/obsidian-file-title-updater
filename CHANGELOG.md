@@ -13,6 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [0.6.0] - 2025-11-14
+
+### Changes
+
+- docs: add comment documenting use of undocumented getBacklinksForFile API
+- docs: update alias feature documentation and rename display text setting for clarity
+- docs: clarify display text preservation behavior and update default setting
+- feat: separate alias preservation from display text preservation with improved backlink handling
+- feat: add optional alias preservation when renaming files to maintain backlink display text
+- feat: add configurable frontmatter title field support
+
 ## [0.5.1] - 2025-08-02
 
 ### Changes
