@@ -59,9 +59,7 @@ export class SettingsTab extends PluginSettingTab {
             );
 
         // Frontmatter configuration section
-        new Setting(containerEl)
-            .setName("Frontmatter")
-            .setHeading();
+        new Setting(containerEl).setName("Frontmatter").setHeading();
 
         new Setting(containerEl)
             .setName("Frontmatter title field")
@@ -111,8 +109,20 @@ export class SettingsTab extends PluginSettingTab {
         }
 
         new Setting(containerEl)
-            .setName("Illegal characters")
-            .setHeading();
+            .setName("Add old filename as alias")
+            .setDesc(
+                "When enabled, the old filename is added to the frontmatter aliases array when a file is renamed. Additionally, wikilink display text is preserved (e.g., [[Old name]] becomes [[New name|Old name]] so it still displays as 'Old name').",
+            )
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.addOldFilenameAsAlias)
+                    .onChange(async (value) => {
+                        this.plugin.settings.addOldFilenameAsAlias = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+
+        new Setting(containerEl).setName("Illegal characters").setHeading();
 
         new Setting(containerEl)
             .setName("Illegal characters handling")

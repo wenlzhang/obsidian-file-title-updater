@@ -188,6 +188,101 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             : this.settings.customFrontmatterField;
     }
 
+    /**
+     * Adds the old filename as an alias in the frontmatter.
+     * This preserves backlinks when renaming files.
+     */
+    private async addOldFilenameAsAlias(
+        file: TFile,
+        oldFilename: string,
+    ): Promise<void> {
+        await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+            // Get existing aliases or create a new array
+            let aliases = frontmatter.aliases || [];
+
+            // Ensure aliases is an array
+            if (!Array.isArray(aliases)) {
+                aliases = [aliases];
+            }
+
+            // Add old filename if it's not already in aliases and not the same as current name
+            if (
+                !aliases.includes(oldFilename) &&
+                oldFilename !== file.basename
+            ) {
+                aliases.push(oldFilename);
+                frontmatter.aliases = aliases;
+            }
+        });
+    }
+
+    /**
+     * Updates wikilinks in other files that reference the old filename.
+     * Preserves the display text by using the old filename as the alias.
+     */
+    private async updateBacklinksAfterRename(
+        oldFilename: string,
+        newFilename: string,
+        file: TFile,
+    ): Promise<void> {
+        // Get all files that link to the renamed file
+        const backlinks = this.app.metadataCache.getBacklinksForFile(file);
+
+        if (!backlinks || backlinks.count() === 0) {
+            return;
+        }
+
+        // Process each file that contains backlinks
+        for (const backlinkPath of backlinks.keys()) {
+            const backlinkFile =
+                this.app.vault.getAbstractFileByPath(backlinkPath);
+
+            if (!(backlinkFile instanceof TFile)) {
+                continue;
+            }
+
+            // Update wikilinks in this file
+            await this.app.vault.process(backlinkFile, (content) => {
+                return this.updateWikilinksInContent(
+                    content,
+                    oldFilename,
+                    newFilename,
+                );
+            });
+        }
+    }
+
+    /**
+     * Updates wikilinks in content that reference the old filename.
+     * Converts [[OldName]] to [[NewName|OldName]] to preserve the display text.
+     */
+    private updateWikilinksInContent(
+        content: string,
+        oldFilename: string,
+        newFilename: string,
+    ): string {
+        // Regex to match wikilinks: [[link]] or [[link|display]]
+        const wikilinkRegex = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
+
+        return content.replace(
+            wikilinkRegex,
+            (match, linkTarget, displayText) => {
+                // Only update links that target the old filename
+                if (linkTarget.trim() !== oldFilename) {
+                    return match;
+                }
+
+                // If there's already custom display text, preserve it
+                if (displayText) {
+                    return `[[${newFilename}|${displayText}]]`;
+                } else {
+                    // If no display text, use the old filename as display text
+                    return `[[${newFilename}|${oldFilename}]]`;
+                }
+            },
+        );
+    }
+
     syncTitlesWithDefault() {
         this.syncTitles(this.settings.defaultTitleSource);
     }
@@ -571,10 +666,20 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
     async updateFilename(file: TFile, title: string) {
         if (file.basename !== title) {
+            // Store the old filename for alias feature
+            const oldFilename = file.basename;
+
+            // Rename the file (Obsidian automatically updates all links in the vault)
             await this.app.fileManager.renameFile(
                 file,
                 `${file.parent?.path ? file.parent.path + "/" : ""}${title}${file.extension ? "." + file.extension : ""}`,
             );
+
+            // Add old filename as alias and preserve link display text if enabled
+            if (this.settings.addOldFilenameAsAlias) {
+                await this.addOldFilenameAsAlias(file, oldFilename);
+                await this.updateBacklinksAfterRename(oldFilename, title, file);
+            }
         }
     }
 
