@@ -695,8 +695,10 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                 this.settings.addOldFilenameAsAlias &&
                 this.settings.useOldFilenameAsDisplayText
             ) {
-                const backlinks =
-                    this.app.metadataCache.getBacklinksForFile(file);
+                // getBacklinksForFile is an undocumented API method
+                const backlinks = (
+                    this.app.metadataCache as any
+                ).getBacklinksForFile(file);
                 if (backlinks && backlinks.count() > 0) {
                     backlinkPaths = Array.from(backlinks.keys());
                 }
