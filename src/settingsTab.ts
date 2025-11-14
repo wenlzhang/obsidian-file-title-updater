@@ -133,9 +133,9 @@ export class SettingsTab extends PluginSettingTab {
             );
 
         const preserveDisplayTextSetting = new Setting(containerEl)
-            .setName("Preserve wikilink display text")
+            .setName("Use old filename as display text")
             .setDesc(
-                "When enabled, wikilinks are updated to preserve the old filename as display text. For example, [[OldName]] becomes [[NewName|OldName]] so it still displays as 'OldName'. Links with existing custom display text are left unchanged.",
+                "When enabled, wikilinks without display text are updated to show the old filename. Example: [[Old name]] becomes [[New name|Old name]]. When disabled, [[Old name]] becomes [[New name]]. Note: Links with existing custom display text (e.g., [[Old name|Custom]]) always preserve their custom text and become [[New name|Custom]].",
             )
             .addToggle((toggle) =>
                 toggle

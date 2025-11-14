@@ -227,8 +227,17 @@ export default class FileTitleUpdaterPlugin extends Plugin {
     }
 
     /**
-     * Updates wikilinks in other files after renaming.
-     * Gets backlinks BEFORE renaming, then updates display text AFTER renaming.
+     * Updates wikilinks in other files after renaming to add old filename as display text.
+     * Only called when preserveDisplayText setting is enabled.
+     *
+     * Process:
+     * 1. Backlink paths are collected BEFORE renaming
+     * 2. File is renamed (Obsidian auto-updates all links)
+     * 3. This method adds old filename as display text to links without custom text
+     *
+     * Results:
+     * - [[OldName]] → [[NewName]] → [[NewName|OldName]] (we add display text)
+     * - [[OldName|Custom]] → [[NewName|Custom]] (Obsidian updates, we preserve)
      */
     private async updateBacklinksAfterRename(
         oldFilename: string,
@@ -246,8 +255,6 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             }
 
             // Update wikilinks in this file
-            // At this point, Obsidian has already updated [[OldName]] to [[NewName]]
-            // We need to add display text: [[NewName]] -> [[NewName|OldName]]
             await this.app.vault.process(backlinkFile, (content) => {
                 return this.updateWikilinksInContent(
                     content,
@@ -260,8 +267,11 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
     /**
      * Updates wikilinks in content after Obsidian has already renamed the file.
-     * Adds old filename as display text: [[NewName]] becomes [[NewName|OldName]].
-     * Preserves existing custom display text.
+     * Only called when preserveDisplayText is enabled.
+     *
+     * Behavior:
+     * - [[NewName]] → [[NewName|OldName]] (adds old filename as display text)
+     * - [[NewName|Custom]] → [[NewName|Custom]] (preserves existing custom display text)
      */
     private updateWikilinksInContent(
         content: string,
@@ -279,11 +289,13 @@ export default class FileTitleUpdaterPlugin extends Plugin {
                     return match;
                 }
 
-                // If there's already display text, keep it unchanged
+                // If there's already custom display text, keep it unchanged
+                // This ensures [[NewName|Custom]] stays as [[NewName|Custom]]
                 if (displayText) {
                     return match;
                 } else {
                     // If no display text, add the old filename as display text
+                    // This converts [[NewName]] to [[NewName|OldName]]
                     return `[[${newFilename}|${oldFilename}]]`;
                 }
             },

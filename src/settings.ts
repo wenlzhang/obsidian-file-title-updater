@@ -42,9 +42,11 @@ export interface PluginSettings {
      */
     addOldFilenameAsAlias: boolean;
     /**
-     * Preserve display text when updating wikilinks after renaming.
+     * Use old filename as display text for wikilinks without existing display text.
      * Only applies when addOldFilenameAsAlias is enabled.
-     * When enabled, [[OldName]] becomes [[NewName|OldName]].
+     * When enabled, [[OldName]] becomes [[NewName|OldName]] (displays as 'OldName').
+     * When disabled, [[OldName]] becomes [[NewName]] (displays as 'NewName').
+     * Links with existing custom display text are always preserved regardless of this setting.
      */
     preserveDisplayText: boolean;
     /**
@@ -69,7 +71,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     frontmatterTitleField: "default",
     customFrontmatterField: "title",
     addOldFilenameAsAlias: false,
-    preserveDisplayText: true,
+    preserveDisplayText: false,
     notificationPreference: "all",
     mobileNotificationPreference: null,
 };
