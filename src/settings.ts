@@ -48,7 +48,7 @@ export interface PluginSettings {
      * When disabled, [[OldName]] becomes [[NewName]] (displays as 'NewName').
      * Links with existing custom display text are always preserved regardless of this setting.
      */
-    preserveDisplayText: boolean;
+    useOldFilenameAsDisplayText: boolean;
     /**
      * Notification preferences for sync operations.
      * Options: "all" (show all notifications), "errors" (errors only), "none" (no notifications)
@@ -71,7 +71,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     frontmatterTitleField: "default",
     customFrontmatterField: "title",
     addOldFilenameAsAlias: false,
-    preserveDisplayText: false,
+    useOldFilenameAsDisplayText: false,
     notificationPreference: "all",
     mobileNotificationPreference: null,
 };

@@ -139,9 +139,10 @@ export class SettingsTab extends PluginSettingTab {
             )
             .addToggle((toggle) =>
                 toggle
-                    .setValue(this.plugin.settings.preserveDisplayText)
+                    .setValue(this.plugin.settings.useOldFilenameAsDisplayText)
                     .onChange(async (value) => {
-                        this.plugin.settings.preserveDisplayText = value;
+                        this.plugin.settings.useOldFilenameAsDisplayText =
+                            value;
                         await this.plugin.saveSettings();
                     }),
             );

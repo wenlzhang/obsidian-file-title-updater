@@ -228,7 +228,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
     /**
      * Updates wikilinks in other files after renaming to add old filename as display text.
-     * Only called when preserveDisplayText setting is enabled.
+     * Only called when useOldFilenameAsDisplayText setting is enabled.
      *
      * Process:
      * 1. Backlink paths are collected BEFORE renaming
@@ -267,7 +267,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
     /**
      * Updates wikilinks in content after Obsidian has already renamed the file.
-     * Only called when preserveDisplayText is enabled.
+     * Only called when useOldFilenameAsDisplayText is enabled.
      *
      * Behavior:
      * - [[NewName]] → [[NewName|OldName]] (adds old filename as display text)
@@ -693,7 +693,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             let backlinkPaths: string[] = [];
             if (
                 this.settings.addOldFilenameAsAlias &&
-                this.settings.preserveDisplayText
+                this.settings.useOldFilenameAsDisplayText
             ) {
                 const backlinks =
                     this.app.metadataCache.getBacklinksForFile(file);
@@ -714,7 +714,7 @@ export default class FileTitleUpdaterPlugin extends Plugin {
 
                 // Preserve link display text if enabled
                 if (
-                    this.settings.preserveDisplayText &&
+                    this.settings.useOldFilenameAsDisplayText &&
                     backlinkPaths.length > 0
                 ) {
                     await this.updateBacklinksAfterRename(

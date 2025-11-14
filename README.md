@@ -41,6 +41,8 @@ The bulk operations work recursively, processing all markdown files in the selec
 The plugin includes several intelligent features:
 
 - **Customizable sync targets**: Choose which title locations to sync (all three, or any pair of two)
+- **Customizable frontmatter field**: Use any frontmatter field name for the title instead of just "title"
+- **Alias preservation**: Optionally add old filename as an alias when renaming, preserving backlinks and link display text
 - **Detects already synchronized titles**: If all titles that should be synced are already the same, the plugin will notify you and skip unnecessary updates
 - **Proper spacing**: Ensures exactly one empty line between frontmatter and the first heading
 - **Handles edge cases**: Properly creates first headings when none exist and provides helpful error messages
@@ -61,6 +63,14 @@ You can now choose which of these title locations matter most to your workflow a
 📚 **[View Full Documentation](https://ptkm.net/obsidian-file-title-updater)**
 
 Visit the documentation site to learn how to make the most of File Title Updater in your Obsidian workflow.
+
+## Acknowledgments
+
+This plugin has been enhanced with features inspired by community feedback and other excellent plugins. For example:
+
+- **Alias Feature**: Suggested in [issue #6](https://github.com/wenlzhang/obsidian-file-title-updater/issues/6) by [@ryanfp](https://github.com/ryanfp), this feature adds the old filename as an alias in frontmatter when renaming files, preserving backlinks and link display text. The implementation was inspired by the [Smart Rename plugin](https://github.com/mnaoumov/obsidian-smart-rename) by [@mnaoumov](https://github.com/mnaoumov).
+
+Thank you to everyone who has contributed ideas and feedback to make this plugin better! 🙏
 
 ## Support & Community
 
