@@ -111,16 +111,45 @@ export class SettingsTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Add old filename as alias")
             .setDesc(
-                "When enabled, the old filename is added to the frontmatter aliases array when a file is renamed. Additionally, wikilink display text is preserved (e.g., [[Old name]] becomes [[New name|Old name]] so it still displays as 'Old name').",
+                "When enabled, the old filename is added to the frontmatter aliases array when a file is renamed. This allows Obsidian to resolve links using either the old or new filename.",
             )
             .addToggle((toggle) =>
                 toggle
                     .setValue(this.plugin.settings.addOldFilenameAsAlias)
                     .onChange(async (value) => {
                         this.plugin.settings.addOldFilenameAsAlias = value;
+
+                        // Show/hide preserve display text setting based on selection
+                        if (value) {
+                            preserveDisplayTextSetting.settingEl.style.display =
+                                "block";
+                        } else {
+                            preserveDisplayTextSetting.settingEl.style.display =
+                                "none";
+                        }
+
                         await this.plugin.saveSettings();
                     }),
             );
+
+        const preserveDisplayTextSetting = new Setting(containerEl)
+            .setName("Preserve wikilink display text")
+            .setDesc(
+                "When enabled, wikilinks are updated to preserve the old filename as display text. For example, [[OldName]] becomes [[NewName|OldName]] so it still displays as 'OldName'. Links with existing custom display text are left unchanged.",
+            )
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.preserveDisplayText)
+                    .onChange(async (value) => {
+                        this.plugin.settings.preserveDisplayText = value;
+                        await this.plugin.saveSettings();
+                    }),
+            );
+
+        // Initially hide/show based on current setting
+        if (!this.plugin.settings.addOldFilenameAsAlias) {
+            preserveDisplayTextSetting.settingEl.style.display = "none";
+        }
 
         new Setting(containerEl).setName("Illegal characters").setHeading();
 

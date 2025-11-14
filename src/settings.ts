@@ -39,9 +39,14 @@ export interface PluginSettings {
     customFrontmatterField: string;
     /**
      * Add old filename as an alias in frontmatter when renaming files.
-     * When enabled, also updates wikilink display text to preserve the appearance of links.
      */
     addOldFilenameAsAlias: boolean;
+    /**
+     * Preserve display text when updating wikilinks after renaming.
+     * Only applies when addOldFilenameAsAlias is enabled.
+     * When enabled, [[OldName]] becomes [[NewName|OldName]].
+     */
+    preserveDisplayText: boolean;
     /**
      * Notification preferences for sync operations.
      * Options: "all" (show all notifications), "errors" (errors only), "none" (no notifications)
@@ -64,6 +69,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     frontmatterTitleField: "default",
     customFrontmatterField: "title",
     addOldFilenameAsAlias: false,
+    preserveDisplayText: true,
     notificationPreference: "all",
     mobileNotificationPreference: null,
 };
