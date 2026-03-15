@@ -212,10 +212,12 @@ export default class FileTitleUpdaterPlugin extends Plugin {
             // 1. The old filename is the same as the current filename (no point)
             // 2. The old filename is already in the aliases array (prevent duplicates)
             // 3. The old filename is empty or null
+            // 4. The old filename is a default "Untitled" name
             if (
                 oldFilename &&
                 oldFilename !== file.basename &&
-                !aliases.includes(oldFilename)
+                !aliases.includes(oldFilename) &&
+                !/^Untitled( \d+)?$/.test(oldFilename)
             ) {
                 aliases.push(oldFilename);
                 frontmatter.aliases = aliases;
